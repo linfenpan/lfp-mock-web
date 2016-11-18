@@ -14,11 +14,13 @@ module.exports = {
     return typeof obj === 'object' && obj.set && obj.send && obj.status;
   },
 
+  // 从文件 dirs 列表中，寻找 filename 文件，如果存在，则返回 文件名字
   isFileExistAndGetName (dirs, filename) {
     let result = this.findNextExist(dirs, filename);
     return result.filename;
   },
 
+  // 从 dirs 列表中，寻找 filename 文件，开始索引为 start
   findNextExist (dirs, filename, start) {
     if (typeof dirs === 'string') {
       dirs = [dirs];

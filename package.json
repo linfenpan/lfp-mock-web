@@ -1,6 +1,6 @@
 {
   "name": "lfp-mock-web",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "为了更好的和公司项目合作，基于 express 编写了一个前端 reload 的配置程序",
   "main": "index.js",
   "bin": {

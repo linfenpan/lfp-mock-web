@@ -35,6 +35,7 @@
 const Mock = require('lfp-mock-web');
 // 提供了两个 builder, 一个是公司的 patBuilder，
 // 一个是 jinja 的builder，nunjucksBuilder，不过必须安装 python 的jinja2 才能使用呢~: Mock.nunjucksBuilder.build('index.html', res, {}); 编译临时目录的 index.html 模板
+// PS: builder 不是必要的，只是方便生成数据啦~
 const patBuilder = Mock.patBuilder;
 const staticResource = Mock.staticResource;
 
@@ -68,8 +69,22 @@ module.exports = {
 lfp-mock-web -h
 ```
 
-# 更新历史
+# API
 
+通过 ``` var M = require('lfp-mock-web'); ``` 可以获取到一些常用的工具
+
+  - M.queryTemplate(name: 模板名字)，返回模板在临时目录的正确路径
+  - M.queryResource(name: 资源名字)，返回资源在临时目录的正确路径，可能会返回 http(s) 的路径
+  - M.request(url)，发起 GET 请求，返回一个 Promise 对象，结果为 buffers 或 字符串
+  - M.require1(moduleName: 脚本板块名字，带 .js 的, \_\_dirname: 当前运行脚本的目录)，类似于 require，但是每次请求，都会清空require的缓存
+  - M.watcher(files: 需要监听的文件、文件列表, callback: 监听的回调函数, types: 监听的类型，默认为 ['change']，类型有: change-文件更新, unlink-文件删除, add-文件新增、添加监听，具体可参考chokidar)
+  - M.types.get(name: 文件路径、名字)，返回此文件对应的 content-type 类型
+  - M.util.isHttpURI(url)，是否 http 路径
+  - M.util.isFileExistAndGetName(dirs: 目录列表, name: 文件名字)，从文件列表中，寻找文件，如果文件存在返回全路径，否则返回空字符
+
+# 更新历史
+  * 0.2.0：
+    添加了 queryTemplate/queryResource 两个方法
   * 0.1.9:
     新增跟踪文件的所有变化，新增 builder 返回 thenable[类似promise，具体可npm上，搜索 thenablejs] 对象
   * 0.1.8:

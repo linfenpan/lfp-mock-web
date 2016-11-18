@@ -38,6 +38,8 @@ const Mock = require('lfp-mock-web');
 const patBuilder = Mock.patBuilder;
 const staticResource = Mock.staticResource;
 
+// router.js 每次保存，都会自动重载整个 router.js，所以千万不要在里面，编写任何文件、现成监听的代码。
+// 如果实在有必要编写，可以考虑 require 一个外部的板块
 module.exports = {
   // 配置 get 请求，访问规则为: /pat/xxx.html
   'GET /pat/:page.html': function(req, res, next) {

@@ -73,7 +73,7 @@ module.exports = {
     } else {
       thenable.reject({
         code: 404,
-        content: `can not find ${name}`
+        content: `<html><head></head><body><pre>can not find ${name}</pre></body></html>`
       });
     }
 
@@ -81,11 +81,14 @@ module.exports = {
       (data) => {
         if (res) {
           res.set('content-type', 'text/html');
-          res.status(data.code || 200).send(data.content);
+          res.status(data.code || 200).send(data.content.trim() || '<html><head></head><body></body></html>');
         }
       },
       (error) => {
-        res && res.status(error.code || 404).send(error.content);
+        if (res) {
+          res.set('content-type', 'text/html');
+          res.status(error.code || 404).send(error.content);
+        }
       }
     );
 

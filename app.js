@@ -59,10 +59,10 @@ exports.start = function(port) {
 
   // 监听所有需要的地方
   let reloadTimer;
-  require('./.lib/tmpDirMiddleware').init(function(path) {
+  require('./.lib/tmpDirMiddleware').init(function(type, path) {
     clearTimeout(reloadTimer);
     reloadTimer = setTimeout(() => {
-      console.log(`change: ${path}`.gray);
+      console.log(`${type}: ${path}`.gray);
       reloadWeb();
     }, 10);
   });

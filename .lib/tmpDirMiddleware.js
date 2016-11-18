@@ -6,7 +6,6 @@ const util = require('./common/util');
 const colors = require('colors');
 const watcher = require('./watcher');
 const config = require('./config');
-const FileType = { pat: 1, static: 2 };
 
 // config.templates 和 config.statics 有 { from: , [to:] }, 组成的对象列表
 let tmpDir, templateDirs, staticDirs;
@@ -91,21 +90,43 @@ module.exports = {
 
   _watchTmp (callback) {
     // 监听各个目录，并且复制文件
-    function watchCallback(type, pathOld, pathNew, filepathWatch) {
-      let relativePath = path.relative(pathOld, filepathWatch);
+    function watchCallback(dirOld, dirNew, typeOfWatch, filePathOld) {
+      // change 文件更变
+      // add 文件添加监听，添加文件
+      // unlink 删除文件
+      let relativePath = path.relative(dirOld, filePathOld);
+      let filepathNew = path.resolve(dirNew, relativePath);
 
-      if (fs.existsSync(filepathWatch)) {
-        let filepathNew = path.resolve(pathNew, relativePath);
-        fs.ensureFileSync(filepathNew);
-        fs.copySync(filepathWatch, filepathNew);
-        callback && callback(filepathWatch);
+      switch (typeOfWatch) {
+        case 'change':
+          if (fs.existsSync(filePathOld)) {
+            fs.ensureFileSync(filepathNew);
+            fs.copySync(filePathOld, filepathNew);
+            callback && callback(typeOfWatch, filePathOld);
+          }
+          break;
+        case 'add':
+          if (fs.existsSync(filePathOld) && !fs.existsSync(filepathNew)) {
+            fs.ensureFileSync(filepathNew);
+            fs.copySync(filePathOld, filepathNew);
+            callback && callback(typeOfWatch, filePathOld);
+          }
+          break;
+        case 'unlink':
+          if (fs.existsSync(filepathNew)) {
+            fs.removeSync(filepathNew);
+            callback && callback(typeOfWatch, filePathOld);
+          }
+          break;
+        default:
+          // do nothing...
       }
     }
     templateDirs.forEach(item => {
-      watcher.watch(item.from, watchCallback.bind(null, FileType.pat, item.from, item.to || config.TEMPLATE_TEMPORARY_DIR));
+      watcher.watch(item.from, watchCallback.bind(null, item.from, item.to || config.TEMPLATE_TEMPORARY_DIR), 'all');
     });
     staticNormalDirs.forEach(item => {
-      watcher.watch(item.from, watchCallback.bind(null, FileType.static, item.from, item.to || config.STATIC_TEMPORARY_DIR));
+      watcher.watch(item.from, watchCallback.bind(null, item.from, item.to || config.STATIC_TEMPORARY_DIR), 'all');
     });
 
     console.log('Ready to watch and copy files to template dir'.green.bold);

@@ -1,6 +1,7 @@
 (function refresh () {
   if (!('WebSocket' in window)) {
-    throw new Error('Reload only works with browsers that support WebSockets')
+    window.console && console.error('Reload only works with browsers that support WebSockets');
+    return;
   }
 
   var verboseLogging = false

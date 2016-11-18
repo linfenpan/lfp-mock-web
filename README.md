@@ -23,6 +23,7 @@
   "staticRoot": statics 的文件，临时目录的哪个位置。默认为 __static__
   "data": 数据模拟脚本的路径
   "code": 模板文件的编码，'utf8' 或 'gbk' 之类的
+  "pythonOthers": nunjucksBuilder 相关的 python 的拓展， 例如: ['./.python/filter.py']，强制给文件注入全局变量 data[当前渲染数据], evn[当前jinja2的环境变量]
 }
 ```
 
@@ -41,6 +42,7 @@ module.exports = {
   // 配置 get 请求，访问规则为: /pat/xxx.html
   'GET /pat/:page.html': function(req, res, next) {
     // 根据名字，从临时目录，寻找 pat 文件
+    //  return 类似 Promise 的对象
     patBuilder.build(req.params.page, res, {
       // 默认数据
     });

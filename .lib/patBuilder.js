@@ -4,6 +4,7 @@ const nunjucks = require('nunjucks');
 const path = require('path');
 const util = require('./common/util');
 const fs = require('fs-extra');
+const Thenable = require('thenablejs');
 
 const template = new nunjucks.Environment(new nunjucks.FileSystemLoader(process.cwd()), {
   tags: {
@@ -64,27 +65,54 @@ function readFile(filePath) {
 module.exports = {
   build: function(name, res, defaultData) {
     // 读取模板文件
-    const filePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${name}.pat`);
-    console.log(filePath);
+    name = path.extname(name) ? name : name + '.pat';
+    const basename = path.basename(name, path.extname(name));
+    const filePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${name}`);
+    const thenable = new Thenable();
+
+    if (!util.isResponseObject(res)) {
+      defaultData = res;
+      res = null;
+    }
+
     if (filePath) {
       let html = readFile(filePath);
       html = toNunjucks(html);
 
-      let data = util.readMock(path.join(config.DATA_DIR, `${name}.js`));
+      let data = util.readMock(path.join(config.DATA_DIR, `${basename}.js`));
       data = Object.assign({}, defaultOptions, defaultData || {}, data || {});
       data.__ctx__ = data;
 
       try {
         const result = template.renderString(html, data);
-        res.set('content-type', 'text/html');
-        res.send(result);
+        thenable.resolve({
+          content: result
+        });
       } catch (e) {
         console.error(e);
-        res.set('content-type', 'text/html');
-        res.status(500).send(`<html><head></head><body><pre>${html}</pre></body></html>`);
+        thenable.reject({
+          code: 500,
+          content: `<html><head></head><body><pre>${html}</pre></body></html>`
+        });
       }
     } else {
-      res.send(404, `can not find ${name}`);
+      thenable.reject({
+        code: 404,
+        content: `can not find ${name}`
+      });
     }
+
+    thenable.then(
+      (data) => {
+        if (res) {
+          res.set('content-type', 'text/html');
+          res.status(data.code || 200).send(data.content);
+        }
+      },
+      (error) => {
+        res && res.status(error.code || 404).send(error.content);
+      }
+    );
+    return thenable;
   }
 };

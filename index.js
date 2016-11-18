@@ -4,3 +4,5 @@ module.exports = ['require1', 'combine', 'config', 'request', 'patBuilder', 'nun
   res[file] = require(`./.lib/${file}`);
   return res;
 }, {});
+
+exports.util = require(`./.lib/common/util`);

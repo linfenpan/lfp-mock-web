@@ -10,6 +10,10 @@ module.exports = {
     return /^http/.test(uri);
   },
 
+  isResponseObject (obj) {
+    return typeof obj === 'object' && obj.set && obj.send && obj.status;
+  },
+
   isFileExistAndGetName (dirs, filename) {
     let result = this.findNextExist(dirs, filename);
     return result.filename;

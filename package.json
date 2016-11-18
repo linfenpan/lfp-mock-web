@@ -11,6 +11,7 @@
     "bufferhelper": "^0.2.1",
     "chokidar": "^1.6.0",
     "colors": "^1.1.2",
+    "commander": "^2.9.0",
     "cookie-parser": "^1.4.3",
     "express": "4.14.0",
     "fs-extra": "^0.30.0",
@@ -18,11 +19,14 @@
     "nunjucks": "^2.5.2",
     "reload": "^1.0.1",
     "serve-favicon": "^2.3.0",
-    "commander": "^2.9.0"
+    "thenablejs": "0.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linfenpan/lfp-mock-web.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "grunt": "node runGruntfile.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "da宗熊",
   "license": "MIT"

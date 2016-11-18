@@ -10,7 +10,7 @@ commander
   .option('-p, --port [p]', '服务端口号，默认3000', (val, def) => { val = parseInt(val); return isNaN(val) ? def : val; }, 3000)
   .option('-r, --router [r]', '路由文件，默认是当前命令运行目录的router.js', defRout)
   .option('-c, --config [c]', '配置文件，默认是当前命令运行目录的config.json', defConf)
-  .option('--clean', '是否自动删除临时目录', false)
+  .option('--clean [c]', '是否自动删除临时目录', (val, def) => { if (val == 'false' || val == '0') { return false; } return def; }, true)
   .version(pkg.version || '0.0.0')
   .usage('-command 参数');
 

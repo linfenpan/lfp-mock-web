@@ -70,4 +70,7 @@ lfp-mock-web -h
 
 # 更新历史
 
-  * 0.1.8: 修正静态文件，编码问题
+  * 0.1.9:
+    新增跟踪文件的所有变化，新增 builder 返回 thenable[类似promise，具体可npm上，搜索 thenablejs] 对象
+  * 0.1.8:
+    修正静态文件，编码问题

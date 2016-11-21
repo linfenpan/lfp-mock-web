@@ -11,6 +11,7 @@ commander
   .option('-r, --router [r]', '路由文件，默认是当前命令运行目录的router.js', defRout)
   .option('-c, --config [c]', '配置文件，默认是当前命令运行目录的config.json', defConf)
   .option('--clean [c]', '是否自动删除临时目录', (val, def) => { if (val == 'false' || val == '0') { return false; } return def; }, true)
+  .option('--open', '是否打开浏览器', true)
   .version(pkg.version || '0.0.0')
   .usage('-command 参数');
 
@@ -26,6 +27,7 @@ config.reset({
   port: commander.port,
   config: commander.config,
   router: commander.router,
-  clean: !!commander.clean
+  clean: !!commander.clean,
+  openBrowser: !!commander.open
 });
 require('../app').start(config.PORT);

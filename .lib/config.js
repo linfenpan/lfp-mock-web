@@ -12,7 +12,7 @@ let TEMPORARY_DIR, TEMPLATE_TEMPORARY_DIR, TEMPLATE_SOURCE_DIRS, STATIC_TEMPORAR
 
 function reset(options) {
   const cwd = process.cwd();
-  // { clean: false, router: '', config: '', port: 5555 }
+  // { clean: false, router: '', config: '', port: 5555, openBrowser: false }
   options = Object.assign({  }, options || {});
 
   if ('port' in options) {
@@ -20,6 +20,9 @@ function reset(options) {
   }
   if ('clean' in options) {
     output.clean = options.clean;
+  }
+  if ('openBrowser' in options) {
+    output.openBrowser = options.openBrowser;
   }
 
   if (!options.config) {

@@ -16,12 +16,14 @@ module.exports = {
 
   // 从文件 dirs 列表中，寻找 filename 文件，如果存在，则返回 文件名字
   isFileExistAndGetName (dirs, filename) {
-    let result = this.findNextExist(dirs, filename);
+    let result = this.findNextExist(dirs || [], filename);
     return result.filename;
   },
 
   // 从 dirs 列表中，寻找 filename 文件，开始索引为 start
   findNextExist (dirs, filename, start) {
+    dirs = dirs || [];
+
     if (typeof dirs === 'string') {
       dirs = [dirs];
     }
@@ -62,5 +64,15 @@ module.exports = {
 
   decode (bytes, code) {
     return iconv.decode(bytes, code);
+  },
+
+  openBrowser (target, callback) {
+    var map, opener;
+    map = {
+      'darwin': 'open',
+      'win32': 'start '
+    };
+    opener = map[process.platform] || 'xdg-open';
+    return require("child_process").exec(opener + ' ' + target, callback || function() {});
   }
 };

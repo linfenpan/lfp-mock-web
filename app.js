@@ -8,9 +8,11 @@ const config = require('./.lib/config');
 const colors = require('colors');
 const reload = require('reload');
 const path = require('path');
+const util = require('./.lib/common/util');
 const pkg = require('./package.json');
 const app = express();
 const fs = require('fs');
+const os = require('os');
 
 const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
@@ -40,14 +42,34 @@ app.use((req, res, next) => {
 });
 
 exports.start = function(port) {
+  // 监听端口
+  // 尝试列出所有 ip 地址
+  // 打开第一个 ip 地址链接
   const server = app.listen(port, () => {
-    var host = server.address().address;
-    var port = server.address().port;
-    console.log('Example app listening at port:%s'.bold.green, port);
+    const port = server.address().port;
+    console.log(`listening port: ${port}`.green);
+
+    const ifaces = os.networkInterfaces();
+    let firstAddress;
+    Object.keys(ifaces).forEach(key => {
+      ifaces[key].forEach(details => {
+        if (details.family === 'IPv4') {
+          if (!firstAddress) {
+            firstAddress = 'http://' + details.address + ':' + port;
+          }
+          console.log(('  http://' + details.address + ':' + port).green);
+        }
+      });
+    });
+    if (firstAddress && config.openBrowser) {
+      util.openBrowser(firstAddress, function() {
+        console.log(`open: ${firstAddress}`.green.bold);
+      });
+    }
+    console.log('Hit CTRL-C to stop the server');
   });
 
   const reloadServer = reload(server, app);
-
   function reloadWeb() {
     // 刷新太快, ws 会挂掉~
     try {
@@ -69,7 +91,7 @@ exports.start = function(port) {
 
   // 监听数据文件变化
   watcher.watch([config.DATA_DIR], reloadWeb);
-
+  // 监听路由文件变化
   if (config.ROUTER && fs.existsSync(config.ROUTER)) {
     console.log(`watching route file: ${path.basename(config.ROUTER)}`.green);
     simpleRouter.combine(require1(config.ROUTER));

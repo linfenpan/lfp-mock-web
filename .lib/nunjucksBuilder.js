@@ -12,16 +12,22 @@ const dirMiddle = path.join(__dirname, '../.python/');
 const dirMiddleSave = path.join(process.cwd(), './.python/', 'run.py');
 // python 编译的模板文件
 const pythonTemplate = fs.readFileSync(path.join(dirMiddle, './_run.py')).toString();
-const contentOther = (config.pythonOthers || []).map(dir => {
-  let filepath = path.resolve(process.cwd(), './' + dir);
-  if (fs.existsSync(filepath)) {
-    return fs.readFileSync(filepath).toString();
-  }
-  return '';
-}).join('\n');
+let contentOther = '';
 
 // 生成临时文件，并且运行
 function buildPythonFileAndRun(nameTemplate, paths, data, callback) {
+  if (!contentOther) {
+    contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
+      let filepath = path.resolve(process.cwd(), './' + dir);
+      if (fs.existsSync(filepath)) {
+        return fs.readFileSync(filepath).toString();
+      }
+      return '';
+    }).join('\n');
+
+    contentOther = contentOther || `''' content other  '''`;
+  }
+
   let options = {
     paths, data, contentOther, nameTemplate
   };

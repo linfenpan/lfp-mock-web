@@ -83,9 +83,11 @@ lfp-mock-web -h
   - M.util.isFileExistAndGetName(dirs: 目录列表, name: 文件名字)，从文件列表中，寻找文件，如果文件存在返回全路径，否则返回空字符
 
 # 更新历史
+  * 0.2.2:
+    修正 pythonOthers 参数，获取不正确
   * 0.2.1:
     列举本地可用 IP 地址; 新增 open 参数，用于打开第一个IP地址; util.js 中，寻找地址添加空值判断。
-  * 0.2.0：
+  * 0.2.0:
     添加了 queryTemplate/queryResource 两个方法
   * 0.1.9:
     新增跟踪文件的所有变化，新增 builder 返回 thenable[类似promise，具体可npm上，搜索 thenablejs] 对象

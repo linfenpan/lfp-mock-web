@@ -84,6 +84,8 @@ lfp-mock-web -h
 
 # 更新历史
   * 0.2.2:
+    修正 nunjucksBuilder 模拟的 json 数据，在 python 文件中，解析不正确
+  * 0.2.2:
     修正 pythonOthers 参数，获取不正确
   * 0.2.1:
     列举本地可用 IP 地址; 新增 open 参数，用于打开第一个IP地址; util.js 中，寻找地址添加空值判断。

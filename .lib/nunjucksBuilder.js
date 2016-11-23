@@ -16,20 +16,16 @@ let contentOther = '';
 
 // 生成临时文件，并且运行
 function buildPythonFileAndRun(nameTemplate, paths, data, callback) {
-  if (!contentOther) {
-    contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
-      let filepath = path.resolve(process.cwd(), './' + dir);
-      if (fs.existsSync(filepath)) {
-        return fs.readFileSync(filepath).toString();
-      }
-      return '';
-    }).join('\n');
-
-    contentOther = contentOther || `''' content other  '''`;
-  }
+  contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
+    let filepath = path.resolve(process.cwd(), './' + dir);
+    if (fs.existsSync(filepath)) {
+      return fs.readFileSync(filepath).toString();
+    }
+    return '';
+  }).join('\n');
 
   let options = {
-    paths, data, contentOther, nameTemplate
+    paths, data: JSON.stringify(safeJSON(data)), contentOther, nameTemplate
   };
   let content = pythonTemplate.replace(/\${([^}]+)}/g, (str, key) => {
     return options[key] || '';
@@ -46,6 +42,34 @@ function buildPythonFileAndRun(nameTemplate, paths, data, callback) {
     }
     callback(error, stdout.replace(/(START)(=+)(@+)\2\1([\s\S]*)(END)\2\3\2\5/g, '$4'));
   });
+}
+
+// 最深检测 50 层，过场则无视了
+function safeJSON(data, _deep) {
+  _deep = _deep || 0;
+  if (_deep >= 50) {
+    return data;
+  }
+
+  let result = data;
+  if (!data) {
+    return data;
+  } else if (Array.isArray(data)) {
+    data = data.slice(0);
+    data.forEach((val, index) => {
+      data[index] = safeJSON(val, _deep);
+    });
+    return data;
+  } else if (typeof data === 'object'){
+    data = Object.assign({}, data);
+    Object.keys(data).forEach(key => {
+      data[key] = safeJSON(data[key], _deep + 1);
+    });
+    return data;
+  } else if (typeof data === 'string') {
+    return data.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+  }
+  return data;
 }
 
 module.exports = {
@@ -66,7 +90,7 @@ module.exports = {
       let data = util.readMock(path.join(config.DATA_DIR, basename + '.js'));
       data = Object.assign({}, defaultData || {}, data || {});
 
-      buildPythonFileAndRun(name, JSON.stringify(config.TEMPLATE_SOURCE_DIRS), JSON.stringify(data), function(error, content) {
+      buildPythonFileAndRun(name, JSON.stringify(config.TEMPLATE_SOURCE_DIRS), data, function(error, content) {
         if (error) {
           thenable.reject({
             code: 500,

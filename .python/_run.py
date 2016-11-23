@@ -14,11 +14,15 @@ env = Environment(
     autoescape = True,
     extensions = ['jinja2.ext.do', 'jinja2.ext.with_']
 )
-data_str = '''
-${data}
-'''
-data = json.loads(data_str.strip())
 
+dataStr = '{}'
+file_object = open('${pathData}','r')
+try:
+     dataStr = file_object.read()
+finally:
+     file_object.close()
+
+data = json.loads(dataStr)
 
 ${contentOther}
 

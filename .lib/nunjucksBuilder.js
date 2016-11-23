@@ -9,7 +9,8 @@ const Thenable = require('thenablejs');
 
 // python 的中间目录，以及中间的保存目录
 const dirMiddle = path.join(__dirname, '../.python/');
-const dirMiddleSave = path.join(process.cwd(), './.python/', 'run.py');
+const dirMiddleSave = path.join(process.cwd(), './.python/');
+const fileMiddleSave = path.join(dirMiddleSave, './run.py')
 // python 编译的模板文件
 const pythonTemplate = fs.readFileSync(path.join(dirMiddle, './_run.py')).toString();
 let contentOther = '';
@@ -24,52 +25,28 @@ function buildPythonFileAndRun(nameTemplate, paths, data, callback) {
     return '';
   }).join('\n');
 
+  const filepathData = path.join(dirMiddleSave, './data.json');
+  fs.ensureFileSync(filepathData);
+  fs.writeFileSync(filepathData, JSON.stringify(data || {}, null, 1));
+
   let options = {
-    paths, data: JSON.stringify(safeJSON(data)), contentOther, nameTemplate
+    paths, pathData: filepathData.replace(/\\/g, '\\\\'), contentOther, nameTemplate
   };
   let content = pythonTemplate.replace(/\${([^}]+)}/g, (str, key) => {
     return options[key] || '';
   });
 
-  fs.ensureFileSync(dirMiddleSave);
-  fs.writeFileSync(dirMiddleSave, content);
+  fs.ensureFileSync(fileMiddleSave);
+  fs.writeFileSync(fileMiddleSave, content);
 
   callback = callback || function(er, str) { console.log(str) };
-  exec(`python ${dirMiddleSave}`, (error, stdout, stderr) => {
+  exec(`python ${fileMiddleSave}`, (error, stdout, stderr) => {
     if (error) {
       callback(error, stderr);
       return;
     }
     callback(error, stdout.replace(/(START)(=+)(@+)\2\1([\s\S]*)(END)\2\3\2\5/g, '$4'));
   });
-}
-
-// 最深检测 50 层，过场则无视了
-function safeJSON(data, _deep) {
-  _deep = _deep || 0;
-  if (_deep >= 50) {
-    return data;
-  }
-
-  let result = data;
-  if (!data) {
-    return data;
-  } else if (Array.isArray(data)) {
-    data = data.slice(0);
-    data.forEach((val, index) => {
-      data[index] = safeJSON(val, _deep);
-    });
-    return data;
-  } else if (typeof data === 'object'){
-    data = Object.assign({}, data);
-    Object.keys(data).forEach(key => {
-      data[key] = safeJSON(data[key], _deep + 1);
-    });
-    return data;
-  } else if (typeof data === 'string') {
-    return data.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-  }
-  return data;
 }
 
 module.exports = {

@@ -1,5 +1,5 @@
 'use strict';
-
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const iconv = require('iconv-lite');
@@ -74,5 +74,18 @@ module.exports = {
     };
     opener = map[process.platform] || 'xdg-open';
     return require("child_process").exec(opener + ' ' + target, callback || function() {});
+  },
+
+  getIps () {
+    const ifaces = os.networkInterfaces();
+    const ips = [];
+    Object.keys(ifaces).forEach(key => {
+      ifaces[key].forEach(details => {
+        if (details.family === 'IPv4') {
+          ips.push(details.address);
+        }
+      });
+    });
+    return ips;
   }
 };

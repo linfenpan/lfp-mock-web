@@ -12,7 +12,6 @@ const util = require('./.lib/common/util');
 const pkg = require('./package.json');
 const app = express();
 const fs = require('fs');
-const os = require('os');
 
 const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
@@ -49,20 +48,14 @@ exports.start = function(port) {
     const port = server.address().port;
     console.log(`listening port: ${port}`.green);
 
-    const ifaces = os.networkInterfaces();
-    let firstAddress;
-    Object.keys(ifaces).forEach(key => {
-      ifaces[key].forEach(details => {
-        if (details.family === 'IPv4') {
-          if (!firstAddress) {
-            firstAddress = 'http://' + details.address + ':' + port;
-          }
-          console.log(('  http://' + details.address + ':' + port).green);
-        }
-      });
+    let ips = util.getIps();
+    let firstAddress = `http://${ips[0]}:${port}`;
+    ips.forEach(ip => {
+      console.log(('  http://' + ip + ':' + port).green);
     });
     if (firstAddress && config.openBrowser) {
-      util.openBrowser(firstAddress, function() {
+      let url = typeof config.openBrowser === 'string' ? path.join(firstAddress, './', config.openBrowser) : firstAddress;
+      util.openBrowser(url, function() {
         console.log(`open: ${firstAddress}`.green.bold);
       });
     }

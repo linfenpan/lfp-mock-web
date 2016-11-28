@@ -84,6 +84,8 @@ lfp-mock-web -h
 
 # 更新历史
 
+  * 0.2.5:
+    --open 可接收字符串参数，util.getIps() 返回ipv4地址
   * 0.2.4:
     修正 nunjucksBuilder 模拟的 json 数据，在 python 文件中，解析不正确，改为读取 json 文件。
   * 0.2.3:

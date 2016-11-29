@@ -45,23 +45,8 @@ function decode(res, data, type) {
     if (str.indexOf('�') >= 0) {
       // 尝试解析编码
       let codes = [config.CODE, 'gbk', 'utf-8'];
-      let code = codes.shift();
-      let loopMax = 100, loopIndex = 0;
-
-      // 看看编码是否正确
-      while (code) {
-        loopIndex++;
-        str = util.decode(content, code);
-        if(str.indexOf('�') < 0) {
-          content = str;
-          code = null;
-        } else {
-          code = codes.shift();
-        }
-        if (loopIndex > loopMax) {
-          break;
-        }
-      }
+      str = util.decode(content, codes) || str;
+      content = str;
     }
   }
   res.send(content);

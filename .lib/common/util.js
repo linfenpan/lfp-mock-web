@@ -63,6 +63,16 @@ module.exports = {
   },
 
   decode (bytes, code) {
+    if (Array.isArray(code)) {
+      let codes = code;
+      for (let i = 0, max = codes.length; i < max; i++) {
+        let result = this.decode(bytes, codes[i]);
+        if(result.indexOf('�') < 0) {
+          return result;
+        }
+      }
+      return null;
+    }
     return iconv.decode(bytes, code);
   },
 

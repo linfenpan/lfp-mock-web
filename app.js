@@ -33,7 +33,7 @@ app.use(require('./.lib/connect')({
 const router = express.Router();
 app.use('/', router);
 const simpleRouter = new SimpleRouter(router, {
-  'GET /test': 'test success'
+  // 'GET /test': 'test success'
 });
 
 app.use((req, res, next) => {

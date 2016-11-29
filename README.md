@@ -76,6 +76,7 @@ lfp-mock-web -h
   - M.queryTemplate(name: 模板名字)，返回模板在临时目录的正确路径
   - M.queryResource(name: 资源名字)，返回资源在临时目录的正确路径，可能会返回 http(s) 的路径
   - M.request(url)，发起 GET 请求，返回一个 Promise 对象，结果为 buffers 或 字符串
+  - M.request.transmit(options, req)，创建一个转发的请求，返回一个 Promise 对象，结果为 buffers 或 字符串。其中 options 参考 http.request 方法，path 和 method 已经内置处理
   - M.require1(moduleName: 脚本板块名字，带 .js 的, \_\_dirname: 当前运行脚本的目录)，类似于 require，但是每次请求，都会清空require的缓存
   - M.watcher(files: 需要监听的文件、文件列表, callback: 监听的回调函数, types: 监听的类型，默认为 ['change']，类型有: change-文件更新, unlink-文件删除, add-文件新增、添加监听，具体可参考chokidar)
   - M.types.get(name: 文件路径、名字)，返回此文件对应的 content-type 类型
@@ -84,6 +85,9 @@ lfp-mock-web -h
 
 # 更新历史
 
+  * 0.2.6:
+    --open 默认改为 false， util.decode 第二个参数，可接收编码数组，如 util.decode(bytes, ['utf8', 'gbk']) 或 util.decode(bytes, 'gbk');
+    request 添加 GET 和 POST 请求转发的辅助函数，request.transmit(options, req); 其中 options 参考 http.request 方法的参数，其中的 path 和 method 内置已经处理，data 为额外的参数配置对象。
   * 0.2.5:
     --open 可接收字符串参数，util.getIps() 返回ipv4地址
   * 0.2.4:

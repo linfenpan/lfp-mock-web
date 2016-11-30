@@ -85,6 +85,8 @@ lfp-mock-web -h
 
 # 更新历史
 
+  * 0.2.7:
+    修正 util.isFileExistAndGetName 方法，遇到文件配置，不是目录的BUG
   * 0.2.6:
     --open 默认改为 false， util.decode 第二个参数，可接收编码数组，如 util.decode(bytes, ['utf8', 'gbk']) 或 util.decode(bytes, 'gbk');
     request 添加 GET 和 POST 请求转发的辅助函数，request.transmit(options, req); 其中 options 参考 http.request 方法的参数，其中的 path 和 method 内置已经处理，data 为额外的参数配置对象。

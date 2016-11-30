@@ -14,6 +14,14 @@ module.exports = {
     return typeof obj === 'object' && obj.set && obj.send && obj.status;
   },
 
+  isDir (fullpath, notExistValue) {
+    if (fs.existsSync(fullpath)) {
+      let stat = fs.statSync(fullpath);
+      return stat.isDirectory();
+    }
+    return notExistValue;
+  },
+
   // 从文件 dirs 列表中，寻找 filename 文件，如果存在，则返回 文件名字
   isFileExistAndGetName (dirs, filename) {
     let result = this.findNextExist(dirs || [], filename);
@@ -35,6 +43,9 @@ module.exports = {
 
     for (let i = start || 0, max = dirs.length; i < max; i++) {
       let dir = dirs[i];
+      if (!this.isDir(dir)) {
+        dir = path.dirname(dir);
+      }
       let filePath = path.join(dir, filename) || '';
       if (this.isHttpURI(filePath)) {
         result.start = i;

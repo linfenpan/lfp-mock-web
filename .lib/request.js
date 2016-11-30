@@ -62,7 +62,7 @@ function transmit(params, req) {
   options.headers['Content-Length'] = Buffer.byteLength(dataSend);
 
   return new Promise((resolve, reject) => {
-    console.log(`transmit to: http://${options.host}:${options.port}/${options.path}, method: ${options.method}`.green);
+    console.log(`transmit to: http://${options.host}:${options.port}${options.path}, method: ${options.method}`.green);
     let transmitReq = http.request(options, smitRes => {
       let helper = new BufferHelper();
       smitRes.on('data', chunk => {

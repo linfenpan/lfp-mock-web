@@ -85,6 +85,8 @@ lfp-mock-web -h
 
 # 更新历史
 
+  * 0.2.8:
+    紧急修正域名静态资源，无法获取的问题
   * 0.2.7:
     修正 util.isFileExistAndGetName 方法，遇到文件配置，不是目录的BUG
   * 0.2.6:

@@ -43,7 +43,7 @@ module.exports = {
 
     for (let i = start || 0, max = dirs.length; i < max; i++) {
       let dir = dirs[i];
-      if (!this.isDir(dir)) {
+      if (!this.isHttpURI(dir) && !this.isDir(dir)) {
         dir = path.dirname(dir);
       }
       let filePath = path.join(dir, filename) || '';

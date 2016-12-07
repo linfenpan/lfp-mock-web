@@ -63,27 +63,28 @@ exports.start = function(port) {
   });
 
   const reloadServer = reload(server, app);
-  function reloadWeb() {
-    // 刷新太快, ws 会挂掉~
-    try {
-      reloadServer.reload();
-    } catch(e) {
-      console.log('ignore one reload');
-    }
-  }
-
-  // 监听所有需要的地方
   let reloadTimer;
-  require('./.lib/tmpDirMiddleware').init(function(type, path) {
+  function reloadWeb() {
     clearTimeout(reloadTimer);
     reloadTimer = setTimeout(() => {
-      console.log(`${type}: ${path}`.gray);
-      reloadWeb();
-    }, 10);
+      // 刷新太快, ws 会挂掉~
+      try {
+        reloadServer.reload();
+      } catch(e) {
+        console.log('ignore one reload');
+      }
+    }, 30);
+  }
+
+  // 监听模板、静态资源
+  require('./.lib/tmpDirMiddleware').init(function(type, path) {
+    console.log(`${type}: ${path}`.gray);
+    reloadWeb();
   });
 
   // 监听数据文件变化
   watcher.watch([config.DATA_DIR], reloadWeb);
+  
   // 监听路由文件变化
   if (config.ROUTER && fs.existsSync(config.ROUTER)) {
     console.log(`watching route file: ${path.basename(config.ROUTER)}`.green);

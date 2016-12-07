@@ -22,12 +22,12 @@ commander.on('--help', function() {
 
 commander.parse(process.argv);
 
-const config = require('../.lib/config');
-config.reset({
+const webMocker = require('../index');
+webMocker.initConfig({
   port: commander.port,
   config: commander.config,
   router: commander.router,
   clean: !!commander.clean,
   openBrowser: commander.open
 });
-require('../app').start(config.PORT);
+webMocker.startExpress();

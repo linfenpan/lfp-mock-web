@@ -1,0 +1,15 @@
+{
+  "dir": "./",
+  "templates": [
+    {
+      "from": "./template"
+    }
+  ],
+  "statics": [
+    {
+      "from": "./resource"
+    }
+  ],
+  "data": "./data",
+  "code": "utf8"
+}

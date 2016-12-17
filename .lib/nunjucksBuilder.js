@@ -1,4 +1,5 @@
 'use strict';
+const Builder = require('./builder/simpleBuilder');
 const path = require('path');
 const util = require('./common/util');
 const fs = require('fs-extra');
@@ -15,90 +16,116 @@ const fileMiddleSave = path.join(dirMiddleSave, './run.py')
 const pythonTemplate = fs.readFileSync(path.join(dirMiddle, './_run.py')).toString();
 let contentOther = '';
 
-// 生成临时文件，并且运行
-function buildPythonFileAndRun(nameTemplate, paths, data, callback) {
-  contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
-    let filepath = path.resolve(process.cwd(), './' + dir);
-    if (fs.existsSync(filepath)) {
-      return fs.readFileSync(filepath).toString();
-    }
-    return '';
-  }).join('\n');
+// jinja 模板运行 Builder
+class JinjaBuilder extends Builder {
+  // 生成临时文件，并且运行
+  static buildPythonFileAndRun(nameTemplate, paths, data, callback) {
+    contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
+      let filepath = path.resolve(process.cwd(), './' + dir);
+      if (fs.existsSync(filepath)) {
+        return fs.readFileSync(filepath).toString();
+      }
+      return '';
+    }).join('\n');
 
-  const filepathData = path.join(dirMiddleSave, './data.json');
-  fs.ensureFileSync(filepathData);
-  fs.writeFileSync(filepathData, JSON.stringify(data || {}, null, 1));
+    const filepathData = path.join(dirMiddleSave, './data.json');
+    fs.ensureFileSync(filepathData);
+    fs.writeFileSync(filepathData, JSON.stringify(data || {}, null, 1));
 
-  let options = {
-    paths, pathData: filepathData.replace(/\\/g, '\\\\'), contentOther, nameTemplate
-  };
-  let content = pythonTemplate.replace(/\${([^}]+)}/g, (str, key) => {
-    return options[key] || '';
-  });
+    let options = {
+      paths, pathData: filepathData.replace(/\\/g, '\\\\'), contentOther, nameTemplate
+    };
+    let content = pythonTemplate.replace(/\${([^}]+)}/g, (str, key) => {
+      return options[key] || '';
+    });
 
-  fs.ensureFileSync(fileMiddleSave);
-  fs.writeFileSync(fileMiddleSave, content);
+    fs.ensureFileSync(fileMiddleSave);
+    fs.writeFileSync(fileMiddleSave, content);
 
-  callback = callback || function(er, str) { console.log(str) };
-  exec(`python ${fileMiddleSave}`, (error, stdout, stderr) => {
-    if (error) {
-      callback(error, stderr);
-      return;
-    }
-    callback(error, stdout.replace(/(START)(=+)(@+)\2\1([\s\S]*)(END)\2\3\2\5/g, '$4'));
-  });
-}
+    callback = callback || function(er, str) { console.log(str) };
+    exec(`python ${fileMiddleSave}`, (error, stdout, stderr) => {
+      if (error) {
+        callback(error, stderr);
+        return;
+      }
+      callback(error, stdout.replace(/(START)(=+)(@+)\2\1([\s\S]*)(END)\2\3\2\5/g, '$4'));
+    });
+  }
 
-module.exports = {
-  build(name, res, defaultData) {
+  static *build(options) {
+    yield super.build(options);
+    
     const thenable = new Thenable();
+    let nameTemplate = options.nameTemplate,
+      dataDefault = options.dataDefault,
+      req = options.req,
+      res = options.res;
 
     if (!util.isResponseObject(res)) {
-      defaultData = res;
+      dataDefault = res;
       res = null;
     }
 
-    name = path.extname(name) ? name : name + '.html';
-    const basename = path.basename(name, path.extname(name));
+    nameTemplate = path.extname(nameTemplate) ? nameTemplate : nameTemplate + '.html';
+    const basenameTemplate = path.basename(nameTemplate, path.extname(nameTemplate));
 
     // 读取模板文件
-    const filePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${name}`);
-    if (filePath) {
-      let data = util.readMock(path.join(config.DATA_DIR, basename + '.js'));
-      data = Object.assign({}, defaultData || {}, data || {});
+    const filepath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${nameTemplate}`);
+    if (filepath) {
+      let data = util.readMock(path.join(config.DATA_DIR, basenameTemplate + '.js'));
+      data = Object.assign({}, dataDefault || {}, data || {});
 
-      buildPythonFileAndRun(name, JSON.stringify(config.TEMPLATE_SOURCE_DIRS), data, function(error, content) {
+      this.buildPythonFileAndRun(nameTemplate, JSON.stringify(config.TEMPLATE_SOURCE_DIRS), data, function(error, content) {
         if (error) {
-          thenable.reject({
+          thenable.resolve({
             code: 500,
             content: `<html><head></head><body><pre>${content}</pre></body></html>`
           });
         } else {
-          thenable.resolve({ content });
+          thenable.resolve({ code: 200, content });
         }
       });
     } else {
-      thenable.reject({
+      thenable.resolve({
         code: 404,
-        content: `<html><head></head><body><pre>can not find ${name}</pre></body></html>`
+        content: `<html><head></head><body><pre>不存在模板: ${nameTemplate}</pre></body></html>`
       });
     }
 
-    thenable.then(
-      (data) => {
-        if (res) {
-          res.set('content-type', 'text/html');
-          res.status(data.code || 200).send(data.content.trim() || '<html><head></head><body></body></html>');
-        }
-      },
-      (error) => {
-        if (res) {
-          res.set('content-type', 'text/html');
-          res.status(error.code || 404).send(error.content);
-        }
-      }
-    );
-
     return thenable;
+  }
+
+  static *after(data) {
+    yield super.after(data);
+    const res = data.res;
+    if (res) {
+      res.status(data.code || 200).send(data.content || '<html><head></head><body></body></html>');
+    }
+  }
+
+  static run(req, res, nameTemplate, dataDefault) {
+    const options = {
+      nameTemplate,
+      dataDefault,
+      req, res,
+      type: 'html'
+    };
+
+    return super.run(req, res, options);
+  }
+};
+
+module.exports = {
+  build(nameTemplate, res, dataDefault) {
+    let req = null;
+    if (typeof nameTemplate === 'object') {
+      req = nameTemplate;
+      nameTemplate = defaultData;
+      defaultData = arguments[3] || {};
+    }
+    return JinjaBuilder.run(req, res, nameTemplate, dataDefault);
   },
+  queryStaticResource(filepath, res, next) {
+    return JinjaBuilder.queryStaticResource(filepath, res, next);
+  }
 };

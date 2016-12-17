@@ -1,10 +1,12 @@
 'use strict';
-const toNunjucks = require('./toNunjucks');
-const nunjucks = require('nunjucks');
+const fs = require('fs-extra');
 const path = require('path');
 const util = require('./common/util');
-const fs = require('fs-extra');
+const config = require('./config');
+const Builder = require('./builder/simpleBuilder');
 const Thenable = require('thenablejs');
+const nunjucks = require('nunjucks');
+const toNunjucks = require('./toNunjucks');
 
 const template = new nunjucks.Environment(new nunjucks.FileSystemLoader(process.cwd()), {
   tags: {
@@ -16,8 +18,6 @@ const template = new nunjucks.Environment(new nunjucks.FileSystemLoader(process.
     commentEnd: '@}'
   }
 });
-
-const config = require('./config');
 
 const defaultOptions = {
   HTMLENCODE: function(str) {
@@ -44,79 +44,103 @@ const defaultOptions = {
   }
 };
 
-function readFile(filePath) {
-  let content = util.readFile(filePath, config.CODE);
+// PAT 模板编译器
+class PatBuilder extends Builder {
+  static readFile(filePath) {
+    let content = util.readFile(filePath, config.CODE);
+    // 替换掉 include 的内容
+    while (/<!--#CGIEXT#\s+expand\s+['"]?(.*?)['"]?\s*-->/.test(content)) {
+      content = content.replace(/<!--#CGIEXT#\s+expand\s+['"]?(.*?)['"]?\s*-->/gm, function(str, pathInclude) {
+        let realFilePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, pathInclude);
+        if (realFilePath) {
+          return util.readFile(realFilePath, config.CODE);
+        }
 
-  // 替换掉 include 的内容
-  while (/<!--#CGIEXT#\s+expand\s+['"]?(.*?)['"]?\s*-->/.test(content)) {
-    content = content.replace(/<!--#CGIEXT#\s+expand\s+['"]?(.*?)['"]?\s*-->/gm, function(str, pathInclude) {
-      let realFilePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, pathInclude);
-      if (realFilePath) {
-        return util.readFile(realFilePath, config.CODE);
-      }
-
-      return `<h1>${pathInclude} not exist!!</h1>`;
-    });
+        return `<h1>${pathInclude} not exist!!</h1>`;
+      });
+    }
+    return content;
   }
 
-  return content;
-}
+  static *build(options) {
+    yield super.build(options);
 
-module.exports = {
-  build: function(name, res, defaultData) {
-    // 读取模板文件
-    name = path.extname(name) ? name : name + '.pat';
-    const basename = path.basename(name, path.extname(name));
-    const filePath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${name}`);
     const thenable = new Thenable();
+    let nameTemplate = options.nameTemplate,
+      dataDefault = options.dataDefault,
+      req = options.req,
+      res = options.res;
 
-    if (!util.isResponseObject(res)) {
-      defaultData = res;
-      res = null;
-    }
+    // 读取模板文件
+    nameTemplate = path.extname(nameTemplate) ? nameTemplate : nameTemplate + '.pat';
+    const basenameTemplate = path.basename(nameTemplate, path.extname(nameTemplate));
+    const filepath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${nameTemplate}`);
 
-    if (filePath) {
-      let html = readFile(filePath);
+    if (filepath) {
+      let html = this.readFile(filepath);
       html = toNunjucks(html);
 
-      let data = util.readMock(path.join(config.DATA_DIR, `${basename}.js`));
-      data = Object.assign({}, defaultOptions, defaultData || {}, data || {});
+      let data = util.readMock(path.join(config.DATA_DIR, `${basenameTemplate}.js`), null, [req, res]);
+      data = Object.assign({}, defaultOptions, dataDefault || {}, data || {});
       data.__ctx__ = data;
-
       try {
         const result = template.renderString(html, data);
         thenable.resolve({
+          code: 200,
           content: result
         });
       } catch (e) {
         console.error(e);
-        thenable.reject({
+        thenable.resolve({
           code: 500,
           content: `<html><head></head><body><pre>${html}</pre></body></html>`
         });
       }
     } else {
-      thenable.reject({
+      thenable.resolve({
         code: 404,
-        content: `<html><head></head><body><pre>can not find ${name}</pre></body></html>`
+        content: `<html><head></head><body><pre>模板不存在: ${nameTemplate}</pre></body></html>`
       });
     }
 
-    thenable.then(
-      (data) => {
-        if (res) {
-          res.set('content-type', 'text/html');
-          res.status(data.code || 200).send(data.content.trim() || '<html><head></head><body></body></html>');
-        }
-      },
-      (error) => {
-        if (res) {
-          res.set('content-type', 'text/html');
-          res.status(error.code || 404).send(error.content);
-        }
-      }
-    );
-
     return thenable;
+  }
+
+  static *after(data) {
+    yield super.after(data);
+    const res = data.res;
+    if (res) {
+      res.status(data.code || 200);
+      res.send(data.content || '<html><head></head><body></body></html>');
+    }
+  }
+
+  static run(req, res, nameTemplate, dataDefault) {
+    const options = {
+      nameTemplate,
+      dataDefault,
+      req, res,
+      type: 'html'
+    };
+
+    return super.run(req, res, options);
+  }
+};
+
+
+module.exports = {
+  build: function(nameTemplate, res, dataDefault) {
+    let req = null;
+    if (typeof nameTemplate === 'object') {
+      req = nameTemplate;
+      nameTemplate = defaultData;
+      defaultData = arguments[3] || {};
+    }
+
+    return PatBuilder.run(req, res, nameTemplate, dataDefault);
+  },
+
+  queryStaticResource(filepath, res, next) {
+    return PatBuilder.queryStaticResource(filepath, res, next);
   }
 };

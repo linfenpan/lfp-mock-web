@@ -7,7 +7,7 @@ const request = require('./request');
 const Types = require('./types');
 
 // 请求转发，尝试遍历所有静态目录，寻找资源
-function forwardRequest(url, req, res, next, start) {
+function forwardRequest(url, res, start) {
   let result = util.findNextExist(config.STATIC_SOURCE_DIRS, url, start || 0);
   let filename = result.filename;
   if (filename) {
@@ -28,7 +28,7 @@ function forwardRequest(url, req, res, next, start) {
 
             decode(res, data, type);
           },
-          error => forwardRequest(url, req, res, next, result.start + 1)
+          error => forwardRequest(url, res, result.start + 1)
         );
     } else {
       decode(res, fs.readFileSync(filename), type);
@@ -52,21 +52,24 @@ function decode(res, data, type) {
   res.send(content);
 }
 
-function query(req, res, next) {
-  let url = req.url.replace(/[#?].*$/, '');
-  let filePath = util.isFileExistAndGetName(config.STATIC_SOURCE_DIRS, url) || '';
-  let type = Types.get(filePath);
-  res.set('content-type', type);
+function query(req, res) {
+  // 有些奇怪的地址，类似: a.js?xxx ; //b.js，这些都是无法正确识别的
+  let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/');
+  console.log('寻址地址', path.normalize(url));
 
-  if (filePath) {
-    forwardRequest(url, req, res, next);
+  let filepath = util.isFileExistAndGetName(config.STATIC_SOURCE_DIRS, path.normalize(url)) || '';
+  let type = Types.get(filepath);
+
+  res.set('content-type', type);
+  if (filepath) {
+    forwardRequest(url, res);
   } else {
-    setNotFound(res, req);
+    setNotFound(url, res);
   }
 }
 
-function setNotFound(res, req) {
-  res.status(404).send(`can not find ${req.url}`);
+function setNotFound(url, res) {
+  res.status(404).send(`can not find ${url}`);
 }
 
 module.exports = {

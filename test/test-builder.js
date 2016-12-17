@@ -1,19 +1,18 @@
 'use strict';
 
 const path = require('path');
-const mocker = require('../index');
+const Mocker = require('../index');
+const Builder = require('../.lib/builder/simpleBuilder');
 
-mocker.initConfig({
+Mocker.initConfig({
   config: path.resolve(__dirname, './config.json'),
   openBrowser: false,
   clean: false
 });
 
-
-const Builder = require('./builder');
 class HtmlBuilder extends Builder {
-  static *beforeBuild (options) {
-    yield super.beforeBuild(options);
+  static *before (options) {
+    yield super.before(options);
 
     if (options.html) {
       options.html = '<!-- create by da宗熊 -->\n' + options.html;
@@ -23,16 +22,14 @@ class HtmlBuilder extends Builder {
 
   static *build (options) {
     yield super.build(options);
-
     console.log('build');
   }
 
-  static *afterBuild (options) {
-    yield super.afterBuild(options);
-
+  static *after (options) {
+    yield super.after(options);
     console.log('after build');
     if (options.html) {
-      options.html += '\n<!-- happy ending -->';
+      options.html += '<!-- happy ending -->';
     }
   }
 
@@ -42,12 +39,12 @@ class HtmlBuilder extends Builder {
     if (stream) {
       super.run(req, res, { html: stream.toString() })
         .then(result => {
-          console.log(result);
+          console.log(result.html);
         });
     } else {
       next();
     }
   }
-}
+};
 
 HtmlBuilder.run(null, null, function() { console.log('can\'t find anything') }, 'test.html');

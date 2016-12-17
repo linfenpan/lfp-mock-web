@@ -6,7 +6,9 @@ const output = ['require1', 'combine', 'config', 'request', 'patBuilder', 'nunju
   return res;
 }, {});
 
-output.util = require(`./.lib/common/util`);
+output.util = require('./.lib/common/util');
+output.Builder = require('./.lib/builder/builder');
+output.SimpleBuilder = require('./.lib/builder/simpleBuilder');
 
 output.queryTemplate = function(name) {
   const ctx = this;

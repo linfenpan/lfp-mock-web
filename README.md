@@ -36,30 +36,26 @@ const Mock = require('lfp-mock-web');
 // 提供了两个 builder, 一个是公司的 patBuilder，
 // 一个是 jinja 的builder，nunjucksBuilder，不过必须安装 python 的jinja2 才能使用呢~: Mock.nunjucksBuilder.build('index.html', res, {}); 编译临时目录的 index.html 模板
 // PS: builder 不是必要的，只是方便生成数据啦~
-const patBuilder = Mock.patBuilder;
+const nunjucksBuilder = Mock.nunjucksBuilder;
 const staticResource = Mock.staticResource;
 
 // router.js 每次保存，都会自动重载整个 router.js，所以千万不要在里面，编写任何文件、现成监听的代码。
 // 如果实在有必要编写，可以考虑 require 一个外部的板块
 module.exports = {
-  // 配置 get 请求，访问规则为: /pat/xxx.html
-  'GET /pat/:page.html': function(req, res, next) {
+  // 配置 get 请求，访问规则为: /xxx.html
+  'GET /:page.html': function(req, res, next) {
     // 根据名字，从临时目录，寻找 pat 文件
     //  return 类似 Promise 的对象
-    patBuilder.build(req.params.page, res, {
+    nunjucksBuilder.build(req.params.page, res, {
       // 默认数据
     });
   },
   // 配置静态资源访问规则
   'GET *.:ext': function(req, res, next) {
-    const ext = req.params.ext.toLowerCase();
-    if (['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'txt', 'less', 'scss'].indexOf(ext) >= 0) {
-      // 静态资源转发到本地临时目录
-      staticResource.query(req, res, next);
-    } else {
-      // 继续运行之后的规则
-      next();
-    }
+    // 如果使用了 Builder，能简单的，第一个参数req，可以替换为具体的 文件路径，更容易进行访问定制
+    // 如果传入了 req 对象，将会从静态资源目录中，寻找符合 req.url 对应路径的文件资源
+    // 如果没有使用 Builder，也可以通过 Mock.staticResource.query(req, res); 代替，但是此方法不会根据文件类似，决定是否执行 next 函数
+    nunjucksBuilder.queryStaticResource(req, res, next);
   }
 };
 ```
@@ -71,20 +67,98 @@ lfp-mock-web -h
 
 # API
 
-通过 ``` var M = require('lfp-mock-web'); ``` 可以获取到一些常用的工具
+通过 ``` var G = require('lfp-mock-web'); ``` 可以获取到一些常用的工具
 
-  - M.queryTemplate(name: 模板名字)，返回模板在临时目录的正确路径
-  - M.queryResource(name: 资源名字)，返回资源在临时目录的正确路径，可能会返回 http(s) 的路径
-  - M.request(url)，发起 GET 请求，返回一个 Promise 对象，结果为 buffers 或 字符串
-  - M.request.transmit(options, req)，创建一个转发的请求，返回一个 Promise 对象，结果为 buffers 或 字符串。其中 options 参考 http.request 方法，path 和 method 已经内置处理
-  - M.require1(moduleName: 脚本板块名字，带 .js 的, \_\_dirname: 当前运行脚本的目录)，类似于 require，但是每次请求，都会清空require的缓存
-  - M.watcher(files: 需要监听的文件、文件列表, callback: 监听的回调函数, types: 监听的类型，默认为 ['change']，类型有: change-文件更新, unlink-文件删除, add-文件新增、添加监听，具体可参考chokidar)
-  - M.types.get(name: 文件路径、名字)，返回此文件对应的 content-type 类型
-  - M.util.isHttpURI(url)，是否 http 路径
-  - M.util.isFileExistAndGetName(dirs: 目录列表, name: 文件名字)，从文件列表中，寻找文件，如果文件存在返回全路径，否则返回空字符
+  - G.initConfig()，初始化程序配置，参数: { port: express的端口号, config: '配置文件路径', router: '路由文件路径', clean: 关闭程序是否清空临时目录, openBrowser: 是否打开浏览器 }
+  - G.startExpress()，必须在 initConfig 后使用，启动 express 模拟站点
+  - G.Builder，模板编译器的基类
+  - G.SimpleBuilder，模板编译器的基类，集成了静态资源查询、模板路径查询等功能
+  - G.queryTemplate(name: 模板名字)，返回模板在临时目录的正确路径
+  - G.queryResource(name: 资源名字)，返回资源在临时目录的正确路径，可能会返回 http(s) 的路径
+  - G.request(url)，发起 GET 请求，返回一个 Promise 对象，结果为 buffers 或 字符串
+  - G.request.transmit(options, req)，创建一个转发的请求，返回一个 Promise 对象，结果为 buffers 或 字符串。其中 options 参考 http.request 方法，path 和 method 已经内置处理
+  - G.require1(moduleName: 脚本板块名字，带 .js 的, \_\_dirname: 当前运行脚本的目录)，类似于 require，但是每次请求，都会清空require的缓存
+  - G.watcher(files: 需要监听的文件、文件列表, callback: 监听的回调函数, types: 监听的类型，默认为 ['change']，类型有: change-文件更新, unlink-文件删除, add-文件新增、添加监听，具体可参考chokidar)
+  - G.types.get(name: 文件路径、名字)，返回此文件对应的 content-type 类型
+  - G.util.isHttpURI(url)，是否 http 路径
+  - G.util.isFileExistAndGetName(dirs: 目录列表, name: 文件名字)，从文件列表中，寻找文件，如果文件存在返回全路径，否则返回空字符
+
+# node 程序，启动站点模拟
+
+``` javascript
+const webMocker = require('lfp-mock-web');
+// 初始配置
+webMocker.initConfig({
+  port: 3000,
+  config: './config.json',
+  router: './router.js',
+  clean: true,
+  openBrowser: true
+});
+// 启动模拟
+webMocker.startExpress();
+```
+
+# 编写Builder
+
+定义:
+``` javascript
+'use strict';
+
+const Builder = require('lfp-mock-web').SimpleBuilder;
+
+class HtmlBuilder extends Builder {
+  constructor() { }
+
+  // 如果没有内容，可忽略
+  static *before(options) {
+    // options = {req, res, type: 'html', filepath}
+    yield super.before(options);
+    console.log('before build');
+  }
+
+  static *build(options) {
+    // options = {req, res, type: 'html', filepath}
+    yield super.build(options);
+    const content = '-->额外内容<--';
+    return { content };
+  }
+
+  // 如果没有内容，可忽略
+  static *after(options) {
+    // options = {req, res, type: 'html', filepath, content}
+    yield super.after(options);
+    console.log('after build');
+  }
+
+  static run(req, res, filepath) {
+    // 自动按 before/build/after 顺序调用
+    // 返回一个 Promise/a+ 规范的对象
+    return super.run(req, res, {
+      type: 'html', // SimpleBuilder的after方法，检测到 type=html，会自动设置 res.set('content-type', 'html/text');
+      filepath
+    });
+  }
+};
+
+module.exports = HtmlBuilder;
+```
+
+使用:
+``` javascript
+HtmlBuilder.run(req, res, {
+  filepath: '/test.html'
+}).then(data => {
+  // content === '-->额外内容<--'
+  res.send(data.content);
+});
+```
+
 
 # 更新历史
-  
+
+  * 0.3.0：
+    重构两个 Builder，添加了模板编译的基类，Builder 和 SimpleBuilder；同时，开放了非命令行启动相关的api。
   * 0.2.9:
     修正文件更改过快，导致重载页面后，文件没有更新
   * 0.2.8:
@@ -110,3 +184,10 @@ lfp-mock-web -h
     新增跟踪文件的所有变化，新增 builder 返回 thenable[类似promise，具体可npm上，搜索 thenablejs] 对象
   * 0.1.8:
     修正静态文件，编码问题
+
+# NEXT
+  * 添加 -lv, --livereload 的参数，用于关闭 livereload 的功能
+  * 支持 config 和 router 参数，传入对象，进行配置
+  * 与gulp/grunt配合使用时，文件监听过快，偶尔导致资导向到临时目录失败
+  * 优化静态资源查询策略，支持 location.search 和 hash 的绝对路径地址
+  * 支持 glob 表达式，简化站点配置

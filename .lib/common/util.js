@@ -65,12 +65,12 @@ module.exports = {
     return this.decode(fs.readFileSync(filePath), code);
   },
 
-  readMock (filePath, defaultData) {
+  readMock (filePath, defaultData, args) {
     if (!fs.existsSync(filePath)) {
       return defaultData || {};
     }
     let fn = require1(filePath);
-    return typeof fn === 'function' ? fn() : fn;
+    return typeof fn === 'function' ? fn.apply(null, args || []) : fn;
   },
 
   decode (bytes, code) {

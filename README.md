@@ -157,6 +157,10 @@ HtmlBuilder.run(req, res, {
 
 # 更新历史
 
+  * 0.3.2:
+    清理静态资源多余的log
+  * 0.3.1:
+    bug fix
   * 0.3.0：
     重构两个 Builder，添加了模板编译的基类，Builder 和 SimpleBuilder；同时，开放了非命令行启动相关的api。
   * 0.2.9:

@@ -55,8 +55,6 @@ function decode(res, data, type) {
 function query(req, res) {
   // 有些奇怪的地址，类似: a.js?xxx ; //b.js，这些都是无法正确识别的
   let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/');
-  console.log('寻址地址', path.normalize(url));
-
   let filepath = util.isFileExistAndGetName(config.STATIC_SOURCE_DIRS, path.normalize(url)) || '';
   let type = Types.get(filepath);
 

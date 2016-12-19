@@ -120,8 +120,8 @@ module.exports = {
     let req = null;
     if (typeof nameTemplate === 'object') {
       req = nameTemplate;
-      nameTemplate = defaultData;
-      defaultData = arguments[3] || {};
+      nameTemplate = dataDefault;
+      dataDefault = arguments[3] || {};
     }
     return JinjaBuilder.run(req, res, nameTemplate, dataDefault);
   },

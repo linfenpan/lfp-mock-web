@@ -10,6 +10,7 @@ const Types = require('./types');
 function forwardRequest(url, res, start) {
   let result = util.findNextExist(config.STATIC_SOURCE_DIRS, url, start || 0);
   let filename = result.filename;
+
   if (filename) {
     let type = Types.get(filename);
     // console.log(filename);
@@ -34,7 +35,7 @@ function forwardRequest(url, res, start) {
       decode(res, fs.readFileSync(filename), type);
     }
   } else {
-    setNotFound(res, req);
+    setNotFound(url, res);
   }
 }
 

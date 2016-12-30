@@ -10,11 +10,11 @@ output.util = require('./.lib/common/util');
 output.Builder = require('./.lib/builder/builder');
 output.SimpleBuilder = require('./.lib/builder/simpleBuilder');
 
-output.queryTemplate = function(name) {
+output.queryTemplate = function(name, dirs) {
   const ctx = this;
   const util = ctx.util;
   const config = ctx.config;
-  return util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, name);
+  return util.isFileExistAndGetName(dirs || config.TEMPLATE_SOURCE_DIRS, name);
 };
 
 output.queryResource = function(name) {

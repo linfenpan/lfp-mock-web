@@ -36,7 +36,7 @@ function request(url) {
 }
 
 /**
-  * 请求转发
+  * 请求转发，这个板块
   * @param {Object} http.request的参数，{ host: 域名, port: 端口, path: 路径, data: post 的数据 }
   * @param {HttpRequest} 请求对象
   * @param {HttpResponse} 相应对象
@@ -85,6 +85,9 @@ function transmit(params, req) {
     transmitReq.end();
   });
 }
-
 request.transmit = transmit;
+
+// 使用 http-proxy-middleware 板块，进行请求转发
+request.proxy = require('http-proxy-middleware');
+
 module.exports = request;

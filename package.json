@@ -1,6 +1,6 @@
 {
   "name": "lfp-mock-web",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "基于 express 编写的站点运行程序，集成了 reload，转发，目录打包等操作",
   "main": "index.js",
   "bin": {
@@ -16,6 +16,7 @@
     "cookie-parser": "^1.4.3",
     "express": "4.14.0",
     "fs-extra": "^0.30.0",
+    "http-proxy-middleware": "^0.17.4",
     "iconv-lite": "^0.4.13",
     "nunjucks": "^2.5.2",
     "reload": "^1.0.1",

@@ -58,7 +58,7 @@
     };
     var dataParams = typeof params.data == "string" ? params.data : stringify(params.data);
     if(params.method == "POST"){
-      xmlHttp.open("POST", params.url, params.sync || true);
+      xmlHttp.open("POST", params.url, params.async);
       // 把提交的数据，设置为表单格式提交
       xmlHttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
       xmlHttp.send(dataParams);
@@ -66,7 +66,7 @@
       params.url += params.url.indexOf("?") > 0 ? "" : "?";
       params.url += dataParams;
       // 发送数据
-      xmlHttp.open("GET", params.url, params.sync || true);
+      xmlHttp.open("GET", params.url, params.async);
       xmlHttp.send(null);
     }
   };
@@ -76,20 +76,24 @@
     ajax({
       url: '/.public/reload',
       method: 'GET',
-      data: { last: lastModifyTime },
+      data: { last: lastModifyTime, v: new Date/1 },
       success: function(data) {
+        str = data;
         data = toJSON(data);
         if (!lastModifyTime) {
           lastModifyTime = data.time || '';
         } else if (data && data.time && data.time != lastModifyTime) {
-          window.location.reload();
+          return window.location.reload();
         }
-        checkAndReload();
+        // 防止 ie 死掉
+        setTimeout(function() {
+          checkAndReload();
+        }, 10);
       },
       fail: function() {
         checkAndReload();
       }
     });
   }
-  checkAndReload();
+  setTimeout(checkAndReload, 200);
 })(window);

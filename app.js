@@ -56,7 +56,7 @@ app.get('/.public/reload', function(req, res, next) {
       if (reloader.removeResponse(res) >= 0) {
         res.send({});
       }
-    }, 5000);
+    }, 2000);
   } else {
     reloader.sendModifyTime(res);
   }

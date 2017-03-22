@@ -20,12 +20,50 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use('/.public/', express.static(path.join(__dirname, '.public')));
+// app.use('/.public/', express.static(path.join(__dirname, '.public')));
 
 // 注入重新加载的脚本
+const reloadContent = fs.readFileSync(path.resolve(__dirname, './.public/reload_inline.js')).toString();
+const reloader = {
+  list: [],
+  lastModifyTime: Date.now(),
+  pushResponse (res) {
+    this.list.push(res);
+  },
+  removeResponse (res) {
+    let index = this.list.indexOf(res);
+    if (index >= 0) {
+      this.list.splice(index, 1);
+    }
+    return index;
+  },
+  sendModifyTime (res) {
+    res.send({ time: this.lastModifyTime });
+  },
+  reload: function() {
+    this.lastModifyTime = Date.now();
+    let res = this.list.pop();
+    while (res) {
+      this.sendModifyTime(res);
+      res = this.list.pop();
+    }
+  },
+}
+app.get('/.public/reload', function(req, res, next) {
+  if (req.query.last) {
+    reloader.pushResponse(res);
+    setTimeout(function() {
+      if (reloader.removeResponse(res) >= 0) {
+        res.send({});
+      }
+    }, 5000);
+  } else {
+    reloader.sendModifyTime(res);
+  }
+});
 app.use(require('./.lib/connect')({
   injects: [
-    '<script src="/.public/reload.js"></script>'
+    '<script>'+ reloadContent +'</script>'
   ]
 }));
 
@@ -62,18 +100,9 @@ exports.start = function(port) {
     console.log('Hit CTRL-C to stop the server');
   });
 
-  const reloadServer = reload(server, app);
-  let reloadTimer;
+
   function reloadWeb() {
-    clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(() => {
-      // 刷新太快, ws 会挂掉~
-      try {
-        reloadServer.reload();
-      } catch(e) {
-        console.log('ignore one reload');
-      }
-    }, 30);
+    reloader.reload();
   }
 
   // 监听模板、静态资源
@@ -84,7 +113,7 @@ exports.start = function(port) {
 
   // 监听数据文件变化
   watcher.watch([config.DATA_DIR], reloadWeb);
-  
+
   // 监听路由文件变化
   if (config.ROUTER && fs.existsSync(config.ROUTER)) {
     console.log(`watching route file: ${path.basename(config.ROUTER)}`.green);

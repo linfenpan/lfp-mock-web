@@ -6,18 +6,41 @@ const watch = require('gulp-watch');
 class MockWeb {
   constructor(opts) {
     this.opts = Object.assign({
-      dirname: ''
+      // 源目录
+      src: '',
+      // 目标目录
+      dest: ''
     }, opts || {});
+
+    if (!this.opts.dest) {
+      this.setDest(this.opts.dest);
+    }
 
     this.gulp = gulp;
   }
 
-  dir(dirname) {
-    return new MockWeb({ dirname });
+  setDest(dest) {
+    this.opts.dest = dest || this.opts.src;
+    return this;
   }
 
-  path(filepath) {
-    return path.isAbsolute(filepath) ? filepath : path.join(this.opts.dirname, filepath);
+  // 子元素重写这个方法
+  getDest() {
+    return this.opts.dest;
+  }
+
+  dir(src) {
+    let mw = new MockWeb({ src: this.path(src), dest: this.opts.dest });
+
+    // 子实例，共享下面两个方法
+    // mw.setDest = this.setDest.bind(this);
+    // mw.getDest = () => this.opts.dest;
+
+    return mw;
+  }
+
+  path(filepath, dirname) {
+    return path.isAbsolute(filepath) ? filepath : path.join(typeof dirname === 'string' ? dirname : this.opts.src, filepath);
   }
 
   src(files) {
@@ -53,7 +76,7 @@ MockWeb.extend = (exts) => {
 // 拓展
 MockWeb.extend({
   dest: function(filepath) {
-    return gulp.dest( this.path(filepath) );
+    return gulp.dest( this.path(filepath, this.getDest()) );
   }
 });
 

@@ -69,7 +69,7 @@ class MockWeb {
       return this.path(file);
     });
 
-    this.gulp = watch(_files, Object.assign({ ignoreInitial: false }, opts), fn);
+    this.gulp = watch(_files, Object.assign({ ignoreInitial: true }, opts), fn);
     return this;
   }
 

@@ -151,20 +151,20 @@ mw.setDest('')
 
 
 console.log(chalk.green('test.watch()测试'));
-const watch = require('gulp-watch');
-watch('test/src/*.html', { ignoreInitial: false })
-  .pipe(gulp.dest('test/dest1'))
-  .pipe(callback((file, enc, cb) => {
-    if (file.relative.indexOf('index') < 0) {
-      return cb();
-    }
-
-    let index1 = path.join(__dirname, `./test/dest1/index.html`);
-    assert.isOk(fs.existsSync(index1), `${index1} 必须存在`);
-    cb();
-  }));
+// const watch = require('gulp-watch');
+// watch('test/src/*.html', { ignoreInitial: false })
+//   .pipe(gulp.dest('test/dest1'))
+//   .pipe(callback((file, enc, cb) => {
+//     if (file.relative.indexOf('index') < 0) {
+//       return cb();
+//     }
+//
+//     let index1 = path.join(__dirname, `./test/dest1/index.html`);
+//     assert.isOk(fs.existsSync(index1), `${index1} 必须存在`);
+//     cb();
+//   }));
 test.setDest('')
-  .watch('*.html', function() {
+  .watch('*.html', {ignoreInitial: false}, function() {
     console.log('执行了回调')
   })
   .pipe(callback((file, en, cb) => {
@@ -249,7 +249,7 @@ mw.task('test3', done => {
   done();
 });
 
-test.watch('index.html')
+test.watch('index.html', {ignoreInitial: false})
   .run('test3');
 
 
@@ -271,7 +271,7 @@ mw.task('test4', done => {
   done();
 });
 
-test.watch('a.html', () => {
+test.watch('a.html', {ignoreInitial: false}, () => {
   test.run('test4');
 });
 

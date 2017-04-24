@@ -2,6 +2,7 @@
 const path = require('path');
 const gulp = require('gulp');
 const watch = require('gulp-watch');
+const callback = require('gulp-fncallback');
 
 class MockWeb {
   constructor(opts) {
@@ -55,11 +56,65 @@ class MockWeb {
     return this;
   }
 
+  watch(files, opts, fn) {
+    if (typeof opts === 'function') {
+      fn = opts;
+      opts = {};
+    }
+
+    if (typeof files === 'string') {
+      files = [files];
+    }
+    var _files = files.map((file) => {
+      return this.path(file);
+    });
+
+    this.gulp = watch(_files, Object.assign({ ignoreInitial: false }, opts), fn);
+    return this;
+  }
+
+  task() {
+    gulp.task.apply(gulp, arguments);
+    return this;
+  }
+
+  run() {
+    let tasks = arguments.length ? [].slice.call(arguments, 0) : [];
+    let runTask = (cb) => {
+      let args = tasks.slice(0);
+      let last = args[args.length - 1];
+      if (typeof last === 'function') {
+        let length = args.length;
+        args[length - 1] = () => {
+          last.apply(this, arguments);
+          cb && cb.apply(this, []);
+        };
+      } else {
+        args.push(() => {
+          cb && cb.apply(this, []);
+        });
+      }
+      gulp.start.apply(gulp, args);
+    };
+
+    if (this.gulp.pipe) {
+      this.pipe(callback((file, en, cb) => {
+        runTask(cb);
+      }));
+    } else {
+      runTask();
+    }
+
+    return this;
+  }
+
   pipe() {
     this.gulp = this.gulp.pipe.apply(this.gulp, arguments);
     return this;
   }
 }
+
+MockWeb.gulp = gulp;
 
 // 拓展原型
 MockWeb.extend = (exts) => {

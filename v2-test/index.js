@@ -13,7 +13,7 @@ const fm = {
   })
 };
 
-fm.src.match('./*.html', (src, done) => {
+fm.src.live('./*.html', (src, done) => {
   return src.header('<!-- hello -->\n').dest('./');
 });
-fm.com.match(['*.html', '*/*.html'], './');
+fm.com.live(['*.html', '*/*.html'], './');

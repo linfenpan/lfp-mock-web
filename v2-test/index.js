@@ -1,6 +1,7 @@
 'use strict';
 const mw = require('./lib/mock-web');
 const path = require('path');
+const callback = require('gulp-fncallback');
 
 const fm = {
   src: mw.createFileManager({

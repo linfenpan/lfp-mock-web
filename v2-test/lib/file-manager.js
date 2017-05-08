@@ -66,34 +66,30 @@ class FileManager extends Gulpd {
     this.watchList = [];
   }
 
-  match(files, callback) {
+  getCallback(callback) {
     if (typeof callback === 'string') {
       let dest = callback;
       callback = function (src) {
         return src.dest(dest);
       };
     }
+    return callback;
+  }
+
+  match(files, callback) {
+    callback = this.getCallback(callback);
     queue.add(this.src(files), callback).run();
     this.startWatchTimer();
-
     return this;
   }
 
   live(files, callback) {
-    if (typeof callback === 'string') {
-      let dest = callback;
-      callback = function (src) {
-        return src.dest(dest);
-      };
-    }
-
+    callback = this.getCallback(callback);
     // 执行一遍不同的任务
     this.match(files, callback);
-
     // 添加一个 watch 任务
     this.watchList.push({ files, callback });
     this.startWatchTimer();
-
     return this;
   }
 

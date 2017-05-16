@@ -1,0 +1,16 @@
+{
+  "templates": [
+    {
+      "from": "./com"
+    },
+    {
+      "from": "./src/"
+    }
+  ],
+
+  "statics": [
+    {
+      "from": "./static"
+    }
+  ]
+}

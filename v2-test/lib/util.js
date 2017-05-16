@@ -6,6 +6,11 @@ const iconv = require('iconv-lite');
 const require1 = require('./common/require1');
 
 module.exports = {
+  type(obj) {
+    const strType = Object.prototype.toString.call(obj);
+    return strType.split(' ')[1].slice(0, -1).toLowerCase();
+  },
+
   isHttpURI (uri) {
     return /^http/.test(uri);
   },
@@ -61,17 +66,17 @@ module.exports = {
   //   return result;
   // },
 
-  readFile (filePath, code) {
-    return this.decode(fs.readFileSync(filePath), code);
-  },
-
-  readMock (filePath, defaultData, args) {
-    if (!fs.existsSync(filePath)) {
-      return defaultData || {};
-    }
-    let fn = require1(filePath);
-    return typeof fn === 'function' ? fn.apply(null, args || []) : fn;
-  },
+  // readFile (filePath, code) {
+  //   return this.decode(fs.readFileSync(filePath), code);
+  // },
+  //
+  // readMock (filePath, defaultData, args) {
+  //   if (!fs.existsSync(filePath)) {
+  //     return defaultData || {};
+  //   }
+  //   let fn = require1(filePath);
+  //   return typeof fn === 'function' ? fn.apply(null, args || []) : fn;
+  // },
 
   decode (bytes, code) {
     if (Array.isArray(code)) {

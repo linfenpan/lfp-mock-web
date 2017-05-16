@@ -23,4 +23,6 @@ mw.createServer = function (opts) {
   return new Server(opts);
 }
 
+require('./adaptor')(mw);
+
 module.exports = mw;

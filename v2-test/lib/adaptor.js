@@ -5,6 +5,8 @@ const chalk = require('chalk');
 const fs = require('fs-extra');
 const util = require('./util');
 const chokidar = require('chokidar');
+const isGlob = require('is-glob');
+const globParent = require('glob-parent');
 
 module.exports = function(mw) {
   bindInintConf(mw);
@@ -52,8 +54,41 @@ function bindInintConf(mw) {
 }
 
 function bindUtils(mw) {
-  // Builder, SimpleBuilder, queryTemplate, queryResource, request, require1, watcher
+  // Builder, SimpleBuilder, queryTemplate, queryResource, request, require1
+  mw.Builder = require('./builder/builder');
+  // mw.SimpleBuilder = require('./builder/simpleBuilder');
+  mw.require1 = require('./common/require1');
+  mw.request = require('./common/request');
 }
+
+const confObject2Array = function(obj) {
+  const type = util.type(obj);
+  if (type === 'object') {
+    let map = obj;
+    return Object.keys(map).map((key) => {
+      return { from: key, to: map[key] };
+    });
+  } else if (type === 'array'){
+    const result = [];
+    obj.forEach((item) => {
+      switch (util.type(item)) {
+        case 'string':
+          result.push({ from: item, to: '' });
+          break;
+        case 'object':
+          if (item.from) {
+            result.push({ from: item.from, to: item.to });
+          } else {
+            Object.keys(item).forEach(key => result.push({ from: key, to: item[key] }));
+          }
+          break;
+      }
+    });
+    return result;
+  }
+
+  return [];
+};
 
 class OldMockWeb {
   constructor(mw) {
@@ -96,10 +131,10 @@ class OldMockWeb {
     conf.TEMPORARY_DIR = path.resolve(cwd, conf.temporary);
     // 模板文件目录
     conf.TEMPLATE_TEMPORARY_DIR = path.resolve(conf.TEMPORARY_DIR, conf.templateRoot);
-    conf.TEMPLATE_SOURCE_DIRS = (conf.templates || []).map(item => path.resolve(conf.DIR, item.from));
+    conf.TEMPLATE_SOURCE_DIRS = confObject2Array(conf.templates || []).map(item => path.resolve(conf.DIR, item.from));
     // 静态文件目录
     conf.STATIC_TEMPORARY_DIR = path.resolve(conf.TEMPORARY_DIR, conf.staticRoot);
-    conf.STATIC_SOURCE_DIRS = (conf.statics || []).map(item =>
+    conf.STATIC_SOURCE_DIRS = confObject2Array(conf.statics || []).map(item =>
         util.isHttpURI(item.from) ? item.from : path.resolve(conf.DIR, item.from)
       );
 
@@ -133,16 +168,6 @@ class OldMockWeb {
     }
     const watchMap = this._resouceWatchMap;
 
-    const object2Array = function(obj) {
-      if (util.type(obj) === 'object') {
-        let map = obj;
-        obj = Object.keys(map).map((key) => {
-          return { from: key, to: map[key] };
-        });
-      }
-      return obj;
-    };
-
     const getRelativePath = function(filepath, dirname) {
       return path.relative(dirname, filepath);
     }
@@ -156,28 +181,48 @@ class OldMockWeb {
         if (watchMap[from + ' ' + to]) {
           return;
         }
+
+        let is_glob_expr = isGlob(from) || !fs.existsSync(from);
+        let copyAndReload = function(filepath) {
+          if (is_glob_expr) {
+            const dirParent = globParent(from);
+            const filepathRelative = path.relative(dirParent, filepath);
+            fs.copySync(filepath, path.join(to, filepathRelative));
+          } else {
+            fs.copySync(from, to);
+          }
+          context.reload();
+        }
+
         // 监听当前文件
         chokidar.watch(from, { awaitWriteFinish: true })
           .on('add', (filepath) => {
-            fs.copySync(from, to);
-            context.reload();
+            copyAndReload(filepath);
           })
           .on('change', (filepath) => {
-            fs.copySync(from, to);
-            context.reload();
+            copyAndReload(filepath);
           })
           .on('unlink', (filepath) => {
-            if (fs.existsSync(to)) {
-              fs.removeSync(to);
+            if (is_glob_expr) {
+              const dirParent = globParent(from);
+              const filepathRelative = path.relative(dirParent, filepath);
+              const filepathTo = path.join(to, filepathRelative);
+              fs.existsSync(filepathTo) && fs.removeSync(filepathTo);
+            } else {
+              let filepathRelative = path.relative(from, filepath);
+              if (!filepathRelative) {
+                filepathRelative = path.basename(filepath);
+              }
+              const filepathTo = path.join(to, filepathRelative);
+              fs.existsSync(filepathTo) && fs.removeSync(filepathTo);
             }
-            fs.copySync(from, to);
             context.reload();
           });
       });
     };
 
-    const templates = object2Array(conf.templates || []);
-    const statics = object2Array(conf.statics || []).filter(item => !util.isHttpURI(item.from));
+    const templates = confObject2Array(conf.templates || []);
+    const statics = confObject2Array(conf.statics || []).filter(item => !util.isHttpURI(item.from));
 
     addWatch(templates, conf.TEMPLATE_TEMPORARY_DIR);
     addWatch(statics, conf.STATIC_TEMPORARY_DIR);
@@ -204,9 +249,13 @@ class OldMockWeb {
   }
 
   reload() {
-    if (this.server) {
-      this.server.reload();
-    }
+    clearTimeout(this.timerReload);
+    this.timerReload = setTimeout(() => {
+      if (this.server) {
+        console.log(chalk.green('refresh..'));
+        this.server.reload();
+      }
+    }, 50);
   }
 
   start() {

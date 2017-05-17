@@ -20,15 +20,9 @@
     "cookie-parser": "^1.4.3",
     "express": "^4.15.2",
     "fs-extra": "^2.1.2",
-    "gulp": "^3.9.1",
-    "gulp-batch": "^1.0.5",
-    "gulp-fncallback": "^2.0.2",
-    "gulp-header": "^1.8.8",
-    "gulp-load-plugins": "^1.5.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-sequence": "^0.4.6",
-    "gulp-watch": "^4.3.11",
+    "glob-parent": "^3.1.0",
     "iconv-lite": "^0.4.17",
+    "is-glob": "^3.1.0",
     "serve-favicon": "^2.4.2",
     "thenablejs": "0.0.2"
   }

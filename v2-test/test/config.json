@@ -1,7 +1,8 @@
 {
   "templates": [
     {
-      "from": "./com"
+      "./com/*.html": "",
+      "./com/**/*.html": ""
     },
     {
       "from": "./src/"

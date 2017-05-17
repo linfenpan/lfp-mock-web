@@ -27,56 +27,56 @@ module.exports = {
     return notExistValue;
   },
 
-  // // 从文件 dirs 列表中，寻找 filename 文件，如果存在，则返回 文件名字
-  // isFileExistAndGetName (dirs, filename) {
-  //   let result = this.findNextExist(dirs || [], filename);
-  //   return result.filename;
-  // },
-  //
-  // // 从 dirs 列表中，寻找 filename 文件，开始索引为 start
-  // findNextExist (dirs, filename, start) {
-  //   dirs = dirs || [];
-  //
-  //   if (typeof dirs === 'string') {
-  //     dirs = [dirs];
-  //   }
-  //
-  //   let result = {
-  //     start: -1,
-  //     filename: ''
-  //   };
-  //
-  //   for (let i = start || 0, max = dirs.length; i < max; i++) {
-  //     let dir = dirs[i];
-  //     if (!this.isHttpURI(dir) && !this.isDir(dir)) {
-  //       dir = path.dirname(dir);
-  //     }
-  //     let filePath = path.join(dir, filename) || '';
-  //     if (this.isHttpURI(filePath)) {
-  //       result.start = i;
-  //       result.filename = dir + filename;
-  //       break;
-  //     } else if (fs.existsSync(filePath)) {
-  //       result.start = i;
-  //       result.filename = filePath;
-  //       break;
-  //     }
-  //   }
-  //
-  //   return result;
-  // },
+  // 从文件 dirs 列表中，寻找 filename 文件，如果存在，则返回 文件名字
+  isFileExistAndGetName (dirs, filename) {
+    let result = this.findNextExist(dirs || [], filename);
+    return result.filename;
+  },
 
-  // readFile (filePath, code) {
-  //   return this.decode(fs.readFileSync(filePath), code);
-  // },
-  //
-  // readMock (filePath, defaultData, args) {
-  //   if (!fs.existsSync(filePath)) {
-  //     return defaultData || {};
-  //   }
-  //   let fn = require1(filePath);
-  //   return typeof fn === 'function' ? fn.apply(null, args || []) : fn;
-  // },
+  // 从 dirs 列表中，寻找 filename 文件，开始索引为 start
+  findNextExist (dirs, filename, start) {
+    dirs = dirs || [];
+
+    if (typeof dirs === 'string') {
+      dirs = [dirs];
+    }
+
+    let result = {
+      start: -1,
+      filename: ''
+    };
+
+    for (let i = start || 0, max = dirs.length; i < max; i++) {
+      let dir = dirs[i];
+      if (!this.isHttpURI(dir) && !this.isDir(dir)) {
+        dir = path.dirname(dir);
+      }
+      let filePath = path.join(dir, filename) || '';
+      if (this.isHttpURI(filePath)) {
+        result.start = i;
+        result.filename = dir + filename;
+        break;
+      } else if (fs.existsSync(filePath)) {
+        result.start = i;
+        result.filename = filePath;
+        break;
+      }
+    }
+
+    return result;
+  },
+
+  readFile (filePath, code) {
+    return this.decode(fs.readFileSync(filePath), code);
+  },
+
+  readMock (filePath, defaultData, args) {
+    if (!fs.existsSync(filePath)) {
+      return defaultData || {};
+    }
+    let fn = require1(filePath);
+    return typeof fn === 'function' ? fn.apply(null, args || []) : fn;
+  },
 
   decode (bytes, code) {
     if (Array.isArray(code)) {

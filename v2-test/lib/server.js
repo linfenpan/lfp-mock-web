@@ -95,11 +95,6 @@ class Server {
     return this.addRule('all', url, fn);
   }
 
-  // TODO 添加转发
-  transmit(url, callback) {
-
-  }
-
   // 添加路由文件，整个路由文件，应该接受监听，如果其中一个路由更变了，应该按顺序更新所有路由规则
   addRouterRile(filepath) {
     console.log('增加路由监听:' + filepath);

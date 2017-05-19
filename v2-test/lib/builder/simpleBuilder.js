@@ -13,15 +13,8 @@ class SimpleBuilder extends Builder {
     }
   }
 
-  static queryStaticResource (filepath, res, next) {
-    // 有些奇怪的地址，类似: a.js?xxx ; //b.js，这些都是无法正确识别的
-    filepath = (typeof filepath === 'string' ? filepath : filepath.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/');
-    const ext = (path.extname(filepath || '') || '').toLowerCase().slice(1);
-    if (['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'txt', 'less', 'scss'].indexOf(ext) >= 0) {
-      StaticResource.query(filepath, res);
-    } else {
-      next();
-    }
+  static requestStatic (req, res, next) {
+    require('../../index').requestStatic(req, res, next);
   }
 };
 

@@ -4,7 +4,6 @@ const path = require('path');
 const util = require('../../util');
 const fs = require('fs-extra');
 const exec = require('child_process').exec;
-const config = require('../../../index');
 const Thenable = require('thenablejs');
 
 
@@ -20,7 +19,9 @@ let contentOther = '';
 class JinjaBuilder extends Builder {
   // 生成临时文件，并且运行
   static buildPythonFileAndRun(nameTemplate, paths, data, callback) {
-    contentOther = (config.config && config.config.pythonOthers || []).map(dir => {
+    const conf = require('../../../index').config;
+
+    contentOther = (conf.config && conf.config.pythonOthers || []).map(dir => {
       let filepath = path.resolve(process.cwd(), './' + dir);
       if (fs.existsSync(filepath)) {
         return fs.readFileSync(filepath).toString();
@@ -56,6 +57,8 @@ class JinjaBuilder extends Builder {
     yield super.build(options);
 
     const thenable = new Thenable();
+    const conf = require('../../../index').conf;
+
     let nameTemplate = options.nameTemplate,
       dataDefault = options.dataDefault,
       req = options.req,
@@ -70,12 +73,12 @@ class JinjaBuilder extends Builder {
     const basenameTemplate = path.basename(nameTemplate, path.extname(nameTemplate));
 
     // 读取模板文件
-    const filepath = util.isFileExistAndGetName(config.TEMPLATE_SOURCE_DIRS, `${nameTemplate}`);
+    const filepath = util.isFileExistAndGetName(conf.TEMPLATE_TEMPORARY_DIR, `${nameTemplate}`);
     if (filepath) {
-      let data = util.readMock(path.join(config.DATA_DIR, basenameTemplate + '.js'));
+      let data = util.readMock(path.join(conf.DATA_DIR, basenameTemplate + '.js'));
       data = Object.assign({}, dataDefault || {}, data || {});
 
-      this.buildPythonFileAndRun(nameTemplate, JSON.stringify(config.TEMPLATE_SOURCE_DIRS), data, function(error, content) {
+      this.buildPythonFileAndRun(nameTemplate, JSON.stringify([conf.TEMPLATE_TEMPORARY_DIR]), data, function(error, content) {
         if (error) {
           thenable.resolve({
             code: 500,
@@ -126,6 +129,6 @@ module.exports = {
     return JinjaBuilder.run(req, res, nameTemplate, dataDefault);
   },
   queryStaticResource(filepath, res, next) {
-    return JinjaBuilder.queryStaticResource(filepath, res, next);
+    return JinjaBuilder.requestStatic(filepath, res, next);
   }
 };

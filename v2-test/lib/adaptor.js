@@ -41,24 +41,35 @@ function bindInintConf(mw) {
 
   let hadInit = false;
   mw.config = mw.conf = getDefaultConf();
-  mw.initConfig = mw.initConf = function(conf) {
+  mw.initConfig = mw.createServerByConf = function(conf) {
     if (hadInit) {
       throw new Error('禁止调用多次 inintConfig 方法');
     }
     hadInit = true;
 
-    mw.conf = Object.assign(getDefaultConf(), conf || {});
+    mw.conf = mw.config = Object.assign(getDefaultConf(), conf || {});
     mw.mockweb = new OldMockWeb(mw);
     return mw.mockweb;
   };
 }
 
 function bindUtils(mw) {
-  // Builder, SimpleBuilder, queryTemplate, queryResource, request, require1
+  // Builder, SimpleBuilder, request, require1
   mw.Builder = require('./builder/builder');
-  // mw.SimpleBuilder = require('./builder/simpleBuilder');
+  mw.SimpleBuilder = require('./builder/simpleBuilder');
+  mw.patBuilder = '';
+  mw.nunjucksBuilder = mw.jinjaBuilder = require('./builder/jinja/builder');
+
   mw.require1 = require('./common/require1');
   mw.request = require('./common/request');
+
+  mw.requestStatic = function(req, res, next) {
+    // TODO 查找静态文件，有问题，需要改为从该目录，寻找文件，如果文件存在，则返回，否则，忽略之~
+    // 有些奇怪的地址，类似: a.js?xxx ; //b.js，这些都是无法正确识别的
+    let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/');
+    // 请求转发到静态处理
+    res.redirect('/.static/' + url.replace(/^\/+/, ''));
+  };
 }
 
 const confObject2Array = function(obj) {
@@ -195,11 +206,12 @@ class OldMockWeb {
         }
 
         // 监听当前文件
-        chokidar.watch(from, { awaitWriteFinish: true })
+        chokidar.watch(from, { awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 } })
           .on('add', (filepath) => {
             copyAndReload(filepath);
           })
           .on('change', (filepath) => {
+            console.log('file change');
             copyAndReload(filepath);
           })
           .on('unlink', (filepath) => {
@@ -236,7 +248,7 @@ class OldMockWeb {
     });
 
     // 静态文件访问路径
-    server.setStatic('/', conf.STATIC_TEMPORARY_DIR);
+    server.setStatic('/.static', conf.STATIC_TEMPORARY_DIR);
 
     return this;
   }
@@ -256,6 +268,14 @@ class OldMockWeb {
         this.server.reload();
       }
     }, 50);
+  }
+
+  setStatic(url, dirname) {
+    if (this.server) {
+      this.server.setStatic(url, dirname);
+    }
+
+    return this;
   }
 
   start() {

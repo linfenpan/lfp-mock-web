@@ -85,9 +85,10 @@
           lastModifyTime = data.time || '';
         } else if (data && data.time && data.time != lastModifyTime) {
           // 防止断点后，不刷新页面的情况
+          window.location.reload();
           setInterval(function() {
             window.location.reload();
-          }, 20);
+          }, 1000);
           return;
         }
         // 防止 ie 死掉

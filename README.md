@@ -53,9 +53,9 @@ module.exports = {
   // 配置静态资源访问规则
   'GET *.:ext': function(req, res, next) {
     // 如果使用了 Builder，能简单的，第一个参数req，可以替换为具体的 文件路径，更容易进行访问定制
-    // 如果传入了 req 对象，将会从静态资源目录中，寻找符合 req.url 对应路径的文件资源
-    // 如果没有使用 Builder，也可以通过 Mock.staticResource.query(req, res); 代替，但是此方法不会根据文件类似，决定是否执行 next 函数
-    nunjucksBuilder.queryStaticResource(req, res, next);
+    // 所有静态资源，默认访问路径为 /.static/
+    // requestStatic 仅做了请求转发
+    Mock.requestStatic(req, res, next);
   }
 };
 ```

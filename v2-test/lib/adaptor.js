@@ -71,7 +71,7 @@ function bindUtils(mw) {
     let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/').replace(/^\/+/, '');
     let filepath = path.join(mw.conf.STATIC_TEMPORARY_DIR, './' + url);
     if (fs.existsSync(filepath)) {
-      res.sendFile(filepath);
+      sendFile(res, filepath);
     } else {
       // 否则，去寻找是否有外部绝对路径，如果有，则去绝对路径下载资源，下载之后，保存到临时目录，然后再走一遍 mw.requestStatic(req, res, next);
       const dirUrls = mw.conf.STATIC_SOURCE_DIRS.filter(url => util.isHttpURI(url));
@@ -79,7 +79,7 @@ function bindUtils(mw) {
         if (err) {
           next();
         } else {
-          res.sendFile(filepath);
+          sendFile(res, filepath);
         }
       });
     }
@@ -105,6 +105,11 @@ function downloadAndSaveImage(dirUrls, filename, savedir, callback) {
   } else {
     callback(404);
   }
+}
+
+function sendFile(res, filepath) {
+  // TODO 如果是脚本、或者样式，发现编码不正确，应该修正之~~~~
+  res.sendFile(filepath);
 }
 
 const confObject2Array = function(obj) {

@@ -4,6 +4,7 @@ const path = require('path');
 const chalk = require('chalk');
 const fs = require('fs-extra');
 const util = require('./util');
+const download = require('download');
 const chokidar = require('chokidar');
 const isGlob = require('is-glob');
 const globParent = require('glob-parent');
@@ -72,10 +73,38 @@ function bindUtils(mw) {
     if (fs.existsSync(filepath)) {
       res.sendFile(filepath);
     } else {
-      // TODO 否则，去寻找是否有外部绝对路径，如果有，则去绝对路径下载资源，下载之后，保存到临时目录，然后再走一遍 mw.requestStatic(req, res, next);
-      next();
+      // 否则，去寻找是否有外部绝对路径，如果有，则去绝对路径下载资源，下载之后，保存到临时目录，然后再走一遍 mw.requestStatic(req, res, next);
+      const dirUrls = mw.conf.STATIC_SOURCE_DIRS.filter(url => util.isHttpURI(url));
+      downloadAndSaveImage(dirUrls, url, mw.conf.STATIC_TEMPORARY_DIR, (err, filepath) => {
+        if (err) {
+          next();
+        } else {
+          res.sendFile(filepath);
+        }
+      });
     }
   };
+}
+
+function downloadAndSaveImage(dirUrls, filename, savedir, callback) {
+  const dir = dirUrls.shift();
+  if (dir) {
+    const url = (/\/$/.test(dir) ? dir : dir + '/') + (/^\//.test(filename) ? filename.replace(/^\/*/, '') : filename);
+    console.log(chalk.green('正在请求外部资源:' + url));
+    download(url).then(
+      (data) => {
+        const filepath = path.join(savedir, './' + filename);
+        fs.ensureFileSync(filepath);
+        fs.writeFileSync(filepath, data);
+        callback(null, filepath);
+      },
+      (err) => {
+        downloadAndSaveImage(dirUrls, filename, savedir, callback);
+      }
+    );
+  } else {
+    callback(404);
+  }
 }
 
 const confObject2Array = function(obj) {

@@ -11,7 +11,8 @@
 
   "statics": [
     {
-      "from": "./static"
+      "./static": "",
+      "http://res.xyq.cbg.163.com": ""
     }
   ]
 }

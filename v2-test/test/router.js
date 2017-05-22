@@ -18,7 +18,7 @@ module.exports = {
     G.patBuilder.build('lisence.pat', res, { name: 'da宗熊' });
   },
 
-  'GET /:name.js': function(req, res, next) {
+  'GET *': function(req, res, next) {
     G.requestStatic(req, res, next);
   }
 };

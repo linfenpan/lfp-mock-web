@@ -14,12 +14,11 @@ module.exports = {
     G.jinjaBuilder.build('a.html', res, { name: 'da宗熊' });
   },
 
-  'GET /:name.js': function(req, res, next) {
-    G.requestStatic(req.params.name + '.js', res, next);
+  'GET /pat/:page.html': function(req, res, next) {
+    G.patBuilder.build('lisence.pat', res, { name: 'da宗熊' });
   },
-  //
-  // // 配置静态资源访问规则
-  // 'GET *.:ext': function(req, res, next) {
-  //   G.jinjaBuilder.requestStatic(req, res, next);
-  // }
+
+  'GET /:name.js': function(req, res, next) {
+    G.requestStatic(req, res, next);
+  }
 };

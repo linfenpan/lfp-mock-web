@@ -1,5 +1,4 @@
 'use strict';
 const mw = require('../index');
-const mockweb = mw.initConfig();
-
+const mockweb = mw.createServerByConf();
 mockweb.start();

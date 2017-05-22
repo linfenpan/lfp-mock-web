@@ -75,7 +75,7 @@ class JinjaBuilder extends Builder {
     // 读取模板文件
     const filepath = util.isFileExistAndGetName(conf.TEMPLATE_TEMPORARY_DIR, `${nameTemplate}`);
     if (filepath) {
-      let data = util.readMock(path.join(conf.DATA_DIR, basenameTemplate + '.js'));
+      let data = util.readMock(path.join(conf.DATA_DIR, basenameTemplate + '.js'), null, [req]);
       data = Object.assign({}, dataDefault || {}, data || {});
 
       this.buildPythonFileAndRun(nameTemplate, JSON.stringify([conf.TEMPLATE_TEMPORARY_DIR]), data, function(error, content) {
@@ -128,6 +128,7 @@ module.exports = {
     }
     return JinjaBuilder.run(req, res, nameTemplate, dataDefault);
   },
+
   queryStaticResource(filepath, res, next) {
     return JinjaBuilder.requestStatic(filepath, res, next);
   }

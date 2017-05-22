@@ -59,16 +59,22 @@ function bindUtils(mw) {
   mw.SimpleBuilder = require('./builder/simpleBuilder');
   mw.patBuilder = '';
   mw.nunjucksBuilder = mw.jinjaBuilder = require('./builder/jinja/builder');
+  mw.patBuilder = require('./builder/pat/builder');
 
   mw.require1 = require('./common/require1');
   mw.request = require('./common/request');
 
   mw.requestStatic = function(req, res, next) {
-    // TODO 查找静态文件，有问题，需要改为从该目录，寻找文件，如果文件存在，则返回，否则，忽略之~
+    // 查找静态文件，有问题，需要改为从该目录，寻找文件，如果文件存在，则返回，否则，忽略之~
     // 有些奇怪的地址，类似: a.js?xxx ; //b.js，这些都是无法正确识别的
-    let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/');
-    // 请求转发到静态处理
-    res.redirect('/.static/' + url.replace(/^\/+/, ''));
+    let url = (typeof req === 'string' ? req : req.url).replace(/[#?].*$/, '').replace(/^\/{2,}/, '/').replace(/^\/+/, '');
+    let filepath = path.join(mw.conf.STATIC_TEMPORARY_DIR, './' + url);
+    if (fs.existsSync(filepath)) {
+      res.sendFile(filepath);
+    } else {
+      // TODO 否则，去寻找是否有外部绝对路径，如果有，则去绝对路径下载资源，下载之后，保存到临时目录，然后再走一遍 mw.requestStatic(req, res, next);
+      next();
+    }
   };
 }
 
@@ -116,6 +122,9 @@ class OldMockWeb {
 
     // 监听 router.js 文件，如果有更变，则自动重新加载路由
     this.initRouter();
+
+    // 监听数据文件
+    this.watchMockData();
   }
 
   initByConf() {
@@ -133,7 +142,7 @@ class OldMockWeb {
     // 兼容以前代码!!
     const cwd = process.cwd();
     conf.CODE = conf.code;
-    conf.ROUTER = conf.router = path.resolve(cwd, conf.router);
+    conf.ROUTER = path.resolve(cwd, conf.router);
     conf.PORT = conf.port;
     conf.DIR = path.resolve(cwd, conf.dir);
     // 数据文件目录
@@ -254,9 +263,20 @@ class OldMockWeb {
   }
 
   initRouter() {
-    if (this.conf.router) {
-      this.server.addRouterRile(this.conf.router);
+    if (this.conf.ROUTER) {
+      this.server.addRouterRile(this.conf.ROUTER);
     }
+    return this;
+  }
+
+  watchMockData() {
+    if (this.conf.DATA_DIR && fs.existsSync(this.conf.DATA_DIR)) {
+      chokidar.watch(this.conf.DATA_DIR)
+        .on('change', () => {
+          this.reload();
+        });
+    }
+
     return this;
   }
 

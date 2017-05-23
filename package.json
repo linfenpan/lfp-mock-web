@@ -1,6 +1,6 @@
 {
   "name": "lfp-mock-web",
-  "version": "0.3.5",
+  "version": "1.0.0",
   "description": "基于 express 编写的站点运行程序，集成了 reload，转发，目录打包等操作",
   "main": "index.js",
   "bin": {

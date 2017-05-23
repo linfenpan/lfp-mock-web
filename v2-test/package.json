@@ -26,6 +26,7 @@
     "http-proxy-middleware": "^0.17.4",
     "iconv-lite": "^0.4.17",
     "is-glob": "^3.1.0",
+    "nunjucks": "^3.0.0",
     "serve-favicon": "^2.4.2",
     "thenablejs": "0.0.2"
   }

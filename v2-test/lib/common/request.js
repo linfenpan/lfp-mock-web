@@ -1,6 +1,6 @@
 'use strict';
 const http = require('http');
-const colors = require('colors');
+const chalk = require('chalk');
 const querystring = require('querystring');
 const BufferHelper = require('bufferhelper');
 
@@ -62,7 +62,7 @@ function transmit(params, req) {
   options.headers['Content-Length'] = Buffer.byteLength(dataSend);
 
   return new Promise((resolve, reject) => {
-    console.log(`transmit to: http://${options.host}:${options.port}${options.path}, method: ${options.method}`.green);
+    console.log(chalk.green(`transmit to: http://${options.host}:${options.port}${options.path}, method: ${options.method}`));
     let transmitReq = http.request(options, smitRes => {
       let helper = new BufferHelper();
       smitRes.on('data', chunk => {

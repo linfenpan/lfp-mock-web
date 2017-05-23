@@ -13,6 +13,9 @@ class SimpleBuilder extends Builder {
     }
   }
 
+  static queryStaticResource (req, res, next) {
+    require('../../index').requestStatic(req, res, next);
+  }
   static requestStatic (req, res, next) {
     require('../../index').requestStatic(req, res, next);
   }

@@ -77,7 +77,7 @@ class PatBuilder extends Builder {
     // 读取模板文件
     nameTemplate = path.extname(nameTemplate) ? nameTemplate : nameTemplate + '.pat';
     const basenameTemplate = nameTemplate.replace(path.extname(nameTemplate), '');
-    const filepath = util.isFileExistAndGetName(conf.TEMPLATE_SOURCE_DIRS, `${nameTemplate}`);
+    const filepath = util.isFileExistAndGetName(conf.TEMPLATE_TEMPORARY_DIR, `${nameTemplate}`);
 
     if (filepath) {
       let html = this.readFile(filepath);

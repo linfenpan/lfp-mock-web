@@ -118,27 +118,38 @@ class Server {
       || (this.watcherRouter = chokidar.watch([]));
 
     const files = this.filesRouter;
-    const updateByFile = function() {
+    const updateByFile = () => {
       files.forEach((filepath) => {
         if (fs.existsSync(filepath)) {
           const router = require1(filepath, process.cwd());
-          if (util.type(router) != 'object') {
-            return console.log(chalk.red(`路由文件返回内容必须是对象，本次忽略此文件: ${filepath}`));
+          const typeRouter = util.type(router);
+          switch (typeRouter) {
+            case 'object':
+              Object.keys(router).forEach(key => {
+                // key => GET /*.html
+                let params = key.split(' ');
+                let type = params[0].toLowerCase();
+                let url = params[1].toLowerCase();
+                this.addRule(type, url, router[key]);
+              });
+              break;
+            case 'function':
+              const ctx = {};
+              ['get', 'post', 'all', 'addRule'].forEach(key => {
+                ctx[key] = this[key].bind(this);
+              });
+              router.call(this, ctx);
+              break;
+            default:
+              return console.log(chalk.red(`路由文件返回内容必须是对象或函数，本次忽略此文件: ${filepath}`));
           }
-          Object.keys(router).forEach(key => {
-            // key => GET /*.html
-            let params = key.split(' ');
-            let type = params[0].toLowerCase();
-            let url = params[1].toLowerCase();
-            this.addRule(type, url, router[key]);
-          });
         } else {
           console.log(chalk.red(`路由文件: ${filepath} 不存在`));
         }
       });
       // 路由更新完毕后，刷新页面
       this.reload();
-    }.bind(this);
+    };
 
     updateByFile();
     watcher.unwatch(files);
@@ -151,7 +162,7 @@ class Server {
     return this;
   }
 
-  start() {
+  start(callback) {
     if (this.hadStart) { return this; }
     const app = this.app;
     app.use((req, res, next) => {
@@ -167,6 +178,7 @@ class Server {
         console.log(chalk.green('  http://' + ip + ':' + port));
       });
       console.log(chalk.green.bold('Hit CTRL-C to stop the server'));
+      callback && callback();
     });
 
     return this;

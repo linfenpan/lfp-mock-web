@@ -16,7 +16,7 @@ env = Environment(
 )
 
 dataStr = '{}'
-file_object = open('${pathData}','r')
+file_object = open(${pathData},'r')
 try:
      dataStr = file_object.read()
 finally:

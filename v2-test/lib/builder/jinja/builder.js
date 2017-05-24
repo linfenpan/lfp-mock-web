@@ -9,8 +9,6 @@ const Thenable = require('thenablejs');
 
 // python 的中间目录，以及中间的保存目录
 const dirMiddle = path.join(__dirname, './.python/');
-const dirMiddleSave = path.join(process.cwd(), './.python/');
-const fileMiddleSave = path.join(dirMiddleSave, './run.py')
 // python 编译的模板文件
 const pythonTemplate = fs.readFileSync(path.join(dirMiddle, './_run.py')).toString();
 let contentOther = '';
@@ -29,22 +27,28 @@ class JinjaBuilder extends Builder {
       return '';
     }).join('\n');
 
-    const filepathData = path.join(dirMiddleSave, './data.json');
+    const saveDir = conf.TEMPORARY_DIR || process.cwd();
+
+    const filepathData = path.join(saveDir, `./.data_${Date.now()}.json`);
     fs.ensureFileSync(filepathData);
     fs.writeFileSync(filepathData, JSON.stringify(data || {}, null, 1));
 
     let options = {
-      paths, pathData: filepathData.replace(/\\/g, '\\\\'), contentOther, nameTemplate
+      paths, pathData: JSON.stringify(filepathData), contentOther, nameTemplate
     };
     let content = pythonTemplate.replace(/\${([^}]+)}/g, (str, key) => {
       return options[key] || '';
     });
 
+    const fileMiddleSave = path.join(saveDir, `./.run_${Date.now()}.py`);
     fs.ensureFileSync(fileMiddleSave);
     fs.writeFileSync(fileMiddleSave, content);
 
     callback = callback || function(er, str) { console.log(str) };
     exec(`python ${fileMiddleSave}`, (error, stdout, stderr) => {
+      fs.removeSync(filepathData);
+      fs.removeSync(fileMiddleSave);
+
       if (error) {
         callback(error, stderr);
         return;

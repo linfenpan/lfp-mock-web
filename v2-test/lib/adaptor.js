@@ -87,6 +87,11 @@ function bindUtils(mw) {
       });
     }
   };
+
+  // 在临时目录，寻找模板
+  mw.queryTemplate = function(filename) {
+    return util.isFileExistAndGetName(mw.conf.TEMPLATE_TEMPORARY_DIR, filename);
+  };
 }
 
 // 下载及保存文件
@@ -274,6 +279,7 @@ class OldMockWeb {
         }
 
         if (!is_glob_expr && fs.existsSync(from)) {
+          console.log(chalk.green(`copy from: ${from}`));
           fs.copySync(from, to);
         }
 

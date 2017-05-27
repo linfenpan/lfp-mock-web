@@ -35,10 +35,10 @@ class DynamicRouter {
               continue;
             }
 
-            // 给 req，添加 params 参数 和 path 参数，req的params和path，是只读的
-            const newReq = Object.assign({}, req, { params: layer.params, path: layer.path });
+            // 给 req，添加 params 参数
+            req.params = layer.params;
             yield new Promise((resolve, reject) => {
-              fn(newReq, res, function next(error) {
+              fn(req, res, function next(error) {
                 if (error) {
                   reject(error);
                 } else {

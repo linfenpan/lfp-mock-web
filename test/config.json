@@ -1,15 +1,18 @@
 {
-  "dir": "./",
   "templates": [
     {
-      "from": "./template"
+      "./com/*.html": "",
+      "./com/**/*.html": ""
+    },
+    {
+      "from": "./src/"
     }
   ],
+
   "statics": [
     {
-      "from": "./resource"
+      "./static": "",
+      "http://res.xyq.cbg.163.com": ""
     }
-  ],
-  "data": "./data",
-  "code": "utf8"
+  ]
 }

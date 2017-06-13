@@ -183,6 +183,10 @@ HtmlBuilder.run(req, res, {
 
 # 更新历史
 
+* 1.0.2:
+  修复 jinjaBuilder 不能识别参数的问题；修复静态脚本、样式编码问题
+* 1.0.1:
+  修复 config.json 中，不能文件复制到目录的BUG
 * 1.0.0:
   破坏性升级！from 字段支持 glob 表达式; router配置，支持函数形式
 * 0.3.5:

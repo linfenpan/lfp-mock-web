@@ -182,7 +182,8 @@ HtmlBuilder.run(req, res, {
 
 
 # 更新历史
-
+* 1.0.3:
+  升级 patBuilder，让其支持 jinja2 语法
 * 1.0.2:
   修复 jinjaBuilder 不能识别参数的问题；修复静态脚本、样式编码问题
 * 1.0.1:

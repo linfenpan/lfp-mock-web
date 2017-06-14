@@ -38,6 +38,16 @@ module.exports = function(router) {
     G.patBuilder.build('lisence.pat', res, { name: 'da宗熊' });
   });
 
+  router.all('/get/test', (req, res, next) => {
+    console.log('get 获取参数:', req.query);
+    res.send(req.query);
+  });
+
+  router.all('/post/test', (req, res, next) => {
+    console.log('post 获取参数:', req.body);
+    res.send(req.body);
+  });
+
   // 最后尝试寻找静态资源
   router.get('*', (req, res, next) => {
     G.requestStatic(req, res, next);

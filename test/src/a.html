@@ -8,5 +8,18 @@
 <body>
   内容很可观 {{ name }}<br/>
   <img src="/images/role_icon/small/10.gif"/>
+
+  <script src="https://cdn.bootcss.com/jquery/2.2.3/jquery.min.js" charset="utf-8"></script>
+  <script>
+    $.get('/get/test', { data: 'test' })
+      .done(function(data) {
+        console.log('get', data);
+      });
+
+    $.post('/post/test', { data: 'test' })
+      .done(function(data) {
+        console.log('post', data);
+      });
+  </script>
 </body>
 </html>

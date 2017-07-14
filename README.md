@@ -182,6 +182,8 @@ HtmlBuilder.run(req, res, {
 
 
 # 更新历史
+* 1.0.4:
+  快捷方式复制BUG
 * 1.0.3:
   升级 patBuilder，让其支持 jinja2 语法
 * 1.0.2:

@@ -4,8 +4,11 @@
 import json
 from jinja2 import Environment, FileSystemLoader
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
+import traceback
 
 paths = ${paths};
 env = Environment(
@@ -26,11 +29,17 @@ data = json.loads(dataStr)
 
 ${contentOther}
 
-template = env.get_template('${nameTemplate}')
-
-def __render(tmp, map):
+def __render(map):
     print 'START=============@@@=============START'
-    print tmp.render(**map)
-    print 'END=============@@@=============END'
+    try:
+        template = env.get_template('${nameTemplate}')
+        print template.render(**map)
+    except Exception, e:
+        print '<pre>'
+        print 'message:\n', e.message
+        print '\ndetail:\n%s' % traceback.format_exc()
+        print '</pre>'
+    finally:
+        print 'END=============@@@=============END'
 
-__render(template, data)
+__render(data)

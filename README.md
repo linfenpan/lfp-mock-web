@@ -1,6 +1,8 @@
 # 前端项目模拟
+PS: 若想精细化定制自己的项目，请使用 [server-similation-toolkit](https://www.npmjs.com/package/server-similation-toolkit)。
 
 为了更好的和公司项目合作，基于 express 编写了一个前端 reload 的配置程序。
+
 
 简单规则如下:
 ``` javascript
@@ -182,6 +184,8 @@ HtmlBuilder.run(req, res, {
 
 
 # 更新历史
+* 1.0.7：
+  修复 watch 文件时，偶尔导致文件内容为空的BUG
 * 1.0.4:
   快捷方式复制BUG
 * 1.0.3:

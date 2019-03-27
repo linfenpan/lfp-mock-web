@@ -6,13 +6,13 @@ from jinja2 import Environment, FileSystemLoader
 import sys
 
 reload(sys)
-sys.setdefaultencoding('utf-8')
+sys.setdefaultencoding('${encoding}')
 
 import traceback
 
 paths = ${paths};
 env = Environment(
-    loader = FileSystemLoader(paths, encoding = 'utf-8'),
+    loader = FileSystemLoader(paths, encoding = '${encoding}'),
     cache_size = -1,
     autoescape = True,
     extensions = ['jinja2.ext.do', 'jinja2.ext.with_']

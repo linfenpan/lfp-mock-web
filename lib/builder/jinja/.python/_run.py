@@ -35,10 +35,10 @@ def __render(map):
         template = env.get_template('${nameTemplate}')
         print template.render(**map)
     except Exception, e:
-        print '<pre>'
+        print '<html><head></head><body><pre>'
         print 'message:\n', e.message
         print '\ndetail:\n%s' % traceback.format_exc()
-        print '</pre>'
+        print '</pre></body></html>'
     finally:
         print 'END=============@@@=============END'
 

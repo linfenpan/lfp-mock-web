@@ -1,3 +1,4 @@
 node_modules/
 v2-test/test/dest*
 v2-test/test/__tmp__/
+package-lock.json
